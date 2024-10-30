@@ -30,7 +30,7 @@ class LoginController extends Controller
 
         $userData = UserPassword::select('Groupp')->where('username', $credentials['username'])->where('password', $credentials['password'])->first();
 
-        if ($userData->Groupp == 'MANDING' || $userData->Groupp == 'SPOTCLEANING') {
+        if ($userData->Groupp == 'MENDING' || $userData->Groupp == 'SPOTCLEANING') {
             if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password']], $remember)) {
                 $request->session()->regenerate();
 

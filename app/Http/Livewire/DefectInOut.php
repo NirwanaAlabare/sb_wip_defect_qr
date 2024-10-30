@@ -58,6 +58,9 @@ class DefectInOut extends Component
     public $defectOutSelectedType;
     public $defectOutSelectedArea;
 
+    public $scannedDefectIn;
+    public $scannedDefectOut;
+
     public $mode;
 
     public $loadingMasterPlan;
@@ -96,13 +99,20 @@ class DefectInOut extends Component
         $this->defectOutSearch = null;
         $this->defectOutListAllChecked = false;
 
+        $this->scannedDefectIn = null;
+        $this->scannedDefectOut = null;
+
         $this->loadingMasterPlan = false;
         $this->baseUrl = url('/');
+
+        $this->emit("qrInputFocus", "in");
     }
 
     public function changeMode($mode)
     {
         $this->mode = $mode;
+
+        $this->emit('qrInputFocus', $mode);
     }
 
     public function updatingDefectInSearch()
@@ -123,6 +133,123 @@ class DefectInOut extends Component
         if ($this->defectOutListAllChecked == true) {
             $this->selectAllDefectOut();
         }
+    }
+
+    public function submitDefectIn()
+    {
+        $this->emit('clearDefectInScan');
+
+        if ($this->scannedDefectIn) {
+            $scannedDefect = Defect::selectRaw("
+                    output_defects.id,
+                    output_defects.kode_numbering,
+                    output_defects.so_det_id,
+                    output_defect_types.defect_type,
+                    act_costing.kpno ws,
+                    act_costing.styleno style,
+                    so_det.color,
+                    so_det.size,
+                    userpassword.username,
+                    output_defect_in_out.id defect_in_id
+                ")->
+                leftJoin("user_sb_wip", "user_sb_wip.id", "=", "output_defects.created_by")->
+                leftJoin("userpassword", "userpassword.line_id", "=", "user_sb_wip.line_id")->
+                leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
+                leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
+                leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+                leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
+                leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_defects.id")->
+                where("output_defects.defect_status", "defect")->
+                where("output_defect_types.allocation", Auth::user()->Groupp)->
+                where("output_defects.kode_numbering", $this->scannedDefectIn)->
+                first();
+
+            if ($scannedDefect) {
+                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->first();
+
+                if (!$defectInOut) {
+                    $createDefectInOut = DefectInOutModel::create([
+                        "defect_id" => $scannedDefect->id,
+                        "status" => "defect",
+                        "type" => Auth::user()->Groupp,
+                        "created_by" => Auth::user()->username
+                    ]);
+
+                    if ($createDefectInOut) {
+                        $this->emit('alert', 'success', "DEFECT '".$scannedDefect->defect_type."' dengan KODE '".$this->scannedDefectIn."' berhasil masuk ke '".Auth::user()->Groupp."'");
+                    } else {
+                        $this->emit('alert', 'error', "Terjadi kesalahan.");
+                    }
+                } else {
+                    $this->emit('alert', 'warning', "QR sudah discan.");
+                }
+            } else {
+                $this->emit('alert', 'error', "Defect dengan QR '".$this->scannedDefectIn."' tidak ditemukan di '".Auth::user()->Groupp."'.");
+            }
+        } else {
+            $this->emit('alert', 'error', "QR tidak sesuai.");
+        }
+
+        $this->scannedDefectIn = null;
+        $this->emit('qrInputFocus', $this->mode);
+    }
+
+    public function submitDefectOut()
+    {
+        if ($this->scannedDefectOut) {
+            $scannedDefect = DefectInOutModel::selectRaw("
+                    output_defects.id,
+                    output_defects.kode_numbering,
+                    output_defects.so_det_id,
+                    output_defect_types.defect_type,
+                    act_costing.kpno ws,
+                    act_costing.styleno style,
+                    so_det.color,
+                    so_det.size,
+                    userpassword.username
+                ")->
+                leftJoin("output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
+                leftJoin("user_sb_wip", "user_sb_wip.id", "=", "output_defects.created_by")->
+                leftJoin("userpassword", "userpassword.line_id", "=", "user_sb_wip.line_id")->
+                leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
+                leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
+                leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+                leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
+                where("output_defect_in_out.status", "defect")->
+                where("output_defect_in_out.type", Auth::user()->Groupp)->
+                where("output_defects.kode_numbering", $this->scannedDefectOut)->
+                first();
+
+            if ($scannedDefect) {
+                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->first();
+
+                if ($defectInOut) {
+                    if ($defectInOut->status == "defect") {
+                        $updateDefectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->update([
+                            "status" => "reworked",
+                            "reworked_at" => Carbon::now(),
+                        ]);
+
+                        if ($updateDefectInOut) {
+                            $this->emit('alert', 'success', "DEFECT '".$scannedDefect->defect_type."' dengan KODE '".$this->scannedDefectOut."' berhasil dikeluarkan dari '".Auth::user()->Groupp."'");
+                        } else {
+                            $this->emit('alert', 'error', "Terjadi kesalahan.");
+                        }
+                    } else {
+                        $this->emit('alert', 'warning', "QR sudah discan di OUT.");
+                    }
+                } else {
+                    $this->emit('alert', 'error', "DEFECT '".$scannedDefect->defect_type."' dengan QR '".$this->scannedDefectOut."' tidak/belum masuk '".Auth::user()->Groupp."'.");
+                }
+            } else {
+                $this->emit('alert', 'error', "DEFECT dengan QR '".$this->scannedDefectOut."' tidak ditemukan di '".Auth::user()->Groupp."'.");
+            }
+        } else {
+            $this->emit('alert', 'error', "QR tidak sesuai.");
+        }
+
+        $this->scannedDefectOut = null;
+        $this->emit('qrInputFocus', $this->mode);
     }
 
     public function selectAllDefectIn()
@@ -842,17 +969,19 @@ class DefectInOut extends Component
             output_defects.defect_type_id,
             output_defect_types.defect_type,
             output_defects.so_det_id,
+            output_defects.kode_numbering,
             so_det.size,
-            COUNT(output_defects.id) defect_qty
+            COUNT(output_defects.id) defect_qty,
+            output_defect_in_out.updated_at
         ")->
         leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
         leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
         leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
         leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
         leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_defects.id")->
-        where("output_defects.defect_status", "defect")->
+        where("output_defect_in_out.status", "defect")->
         where("output_defect_types.allocation", Auth::user()->Groupp)->
-        whereNull("output_defect_in_out.id");
+        whereNotNull("output_defect_in_out.id");
         if ($this->defectInSearch) {
             $defectInQuery->whereRaw("(
                 master_plan.tgl_plan LIKE '%".$this->defectInSearch."%' OR
@@ -860,12 +989,14 @@ class DefectInOut extends Component
                 act_costing.kpno LIKE '%".$this->defectInSearch."%' OR
                 act_costing.styleno LIKE '%".$this->defectInSearch."%' OR
                 master_plan.color LIKE '%".$this->defectInSearch."%' OR
+                output_defects.kode_numbering LIKE '%".$this->defectInSearch."%' OR
                 output_defect_types.defect_type LIKE '%".$this->defectInSearch."%' OR
+                output_defect_in_out.updated_at LIKE '%".$this->defectInSearch."%' OR
                 so_det.size LIKE '%".$this->defectInSearch."%'
             )");
         }
         if ($this->defectInDate) {
-            $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            $defectInQuery->whereRaw("output_defect_in_out.updated_at >= '".$this->defectInDate." 00:00:00' and output_defect_in_out.updated_at <= '".$this->defectInDate." 23:59:59'");
         }
         if ($this->defectInLine) {
             $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
@@ -880,7 +1011,7 @@ class DefectInOut extends Component
             $defectInQuery->where("output_defects.defect_type_id", $this->defectInSelectedType);
         }
         $defectInList = $defectInQuery->
-            groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id")->
+            groupBy("output_defect_in_out.id")->
             orderBy("master_plan.sewing_line")->
             orderBy("master_plan.id_ws")->
             orderBy("master_plan.color")->
@@ -898,8 +1029,10 @@ class DefectInOut extends Component
             output_defects.defect_type_id,
             output_defect_types.defect_type,
             output_defects.so_det_id,
+            output_defects.kode_numbering,
             so_det.size,
-            COUNT(output_defect_in_out.id) defect_qty
+            COUNT(output_defect_in_out.id) defect_qty,
+            output_defect_in_out.updated_at
         ")->
         leftJoin("output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
         leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
@@ -907,7 +1040,7 @@ class DefectInOut extends Component
         leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
         leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
         where("output_defect_types.allocation", Auth::user()->Groupp)->
-        where("output_defect_in_out.status", "defect")->
+        where("output_defect_in_out.status", "reworked")->
         where("output_defect_in_out.type", Auth::user()->Groupp);
         if ($this->defectOutSearch) {
             $defectOutQuery->whereRaw("(
@@ -916,12 +1049,14 @@ class DefectInOut extends Component
                 act_costing.kpno LIKE '%".$this->defectOutSearch."%' OR
                 act_costing.styleno LIKE '%".$this->defectOutSearch."%' OR
                 master_plan.color LIKE '%".$this->defectOutSearch."%' OR
+                output_defects.kode_numbering LIKE '%".$this->defectInSearch."%' OR
                 output_defect_types.defect_type LIKE '%".$this->defectOutSearch."%' OR
+                output_defect_in_out.updated_at LIKE '%".$this->defectInSearch."%' OR
                 so_det.size LIKE '%".$this->defectOutSearch."%'
             )");
         }
         if ($this->defectOutDate) {
-            $defectOutQuery->where("master_plan.tgl_plan", $this->defectOutDate);
+            $defectOutQuery->whereRaw("output_defect_in_out.updated_at >= '".$this->defectOutDate." 00:00:00' and output_defect_in_out.updated_at <= '".$this->defectOutDate." 23:59:59'");
         }
         if ($this->defectOutLine) {
             $defectInQuery->where("master_plan.sewing_line", $this->defectOutLine);
@@ -936,7 +1071,7 @@ class DefectInOut extends Component
             $defectOutQuery->where("output_defects.defect_type_id", $this->defectOutSelectedType);
         }
         $defectOutList = $defectOutQuery->
-            groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id")->
+            groupBy("output_defect_in_out.id")->
             orderBy("master_plan.sewing_line")->
             orderBy("master_plan.id_ws")->
             orderBy("master_plan.color")->
@@ -944,7 +1079,7 @@ class DefectInOut extends Component
             orderBy("output_defects.so_det_id")->
             paginate(10, ['*'], 'defectOutPage');
 
-        return view('livewire.defect-in-out', ["defectInList" => $defectInList, "defectOutList" => $defectOutList]);
+        return view('livewire.defect-in-out', ["defectInList" => $defectInList, "defectOutList" => $defectOutList, "totalDefectIn" => $defectInList->count(), "totalDefectOut" => $defectOutList->count()]);
     }
 
     public function refreshComponent()

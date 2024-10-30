@@ -1,7 +1,7 @@
 @extends('layouts.index')
 
 @section('content')
-    <livewire:defect-in-out/>
+    @livewire('defect-in-out')
 @endsection
 
 @section('custom-script')
@@ -41,5 +41,67 @@
                 hideDefectOutModal();
             }
         });
+
+        async function initDefectInScan(onScanSuccess) {
+            if (html5QrcodeScannerDefectIn) {
+                if ((html5QrcodeScannerDefectIn.getState() && html5QrcodeScannerDefectIn.getState() != 2)) {
+                    const rftScanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+                    // Start Camera
+                    await html5QrcodeScannerDefectIn.start({ facingMode: "environment" }, rftScanConfig, onScanSuccess);
+                }
+            }
+        }
+
+        async function clearDefectInScan() {
+            console.log(html5QrcodeScannerDefectIn.getState());
+            if (html5QrcodeScannerDefectIn) {
+                if (html5QrcodeScannerDefectIn.getState() && html5QrcodeScannerDefectIn.getState() != 1) {
+                    await html5QrcodeScannerDefectIn.stop();
+                    await html5QrcodeScannerDefectIn.clear();
+                }
+            }
+        }
+
+        async function refreshDefectInScan(onScanSuccess) {
+            await clearDefectInScan();
+            await initDefectInScan(onScanSuccess);
+        }
+
+        // Scan QR Defect In
+        if (document.getElementById('defect-in-reader')) {
+            var html5QrcodeScannerDefectIn = new Html5Qrcode("defect-in-reader");
+        }
+
+        async function initDefectOutScan(onScanSuccess) {
+            if (html5QrcodeScannerDefectOut) {
+                if ((html5QrcodeScannerDefectOut.getState() && html5QrcodeScannerDefectOut.getState() != 2)) {
+                    const rftScanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+                    // Start Camera
+                    await html5QrcodeScannerDefectOut.start({ facingMode: "environment" }, rftScanConfig, onScanSuccess);
+                }
+            }
+        }
+
+        async function clearDefectOutScan() {
+            console.log(html5QrcodeScannerDefectOut.getState());
+            if (html5QrcodeScannerDefectOut) {
+                if (html5QrcodeScannerDefectOut.getState() && html5QrcodeScannerDefectOut.getState() != 1) {
+                    await html5QrcodeScannerDefectOut.stop();
+                    await html5QrcodeScannerDefectOut.clear();
+                }
+            }
+        }
+
+        async function refreshDefectOutScan(onScanSuccess) {
+            await clearDefectOutScan();
+            await initDefectOutScan(onScanSuccess);
+        }
+
+        // Scan QR Defect Out
+        if (document.getElementById('defect-out-reader')) {
+            var html5QrcodeScannerDefectOut = new Html5Qrcode("defect-out-reader");
+        }
     </script>
 @endsection

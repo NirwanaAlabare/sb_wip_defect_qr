@@ -17,6 +17,7 @@ class DefectInOut extends Model
         'id',
         'defect_id',
         'status',
+        'type',
         'created_by',
         'created_at',
         'updated_at',
