@@ -581,64 +581,64 @@ if (document.getElementById("alert-sound")) {
     });
 
     setInterval(function() {
-        let now = new Date();
-        let hours = String(now.getHours()).padStart(2, '0');
-        let minutes = String(now.getMinutes()).padStart(2, '0');
-        let seconds = now.getSeconds();
-        let hoursminutes = hours+':'+minutes;
+        // let now = new Date();
+        // let hours = String(now.getHours()).padStart(2, '0');
+        // let minutes = String(now.getMinutes()).padStart(2, '0');
+        // let seconds = now.getSeconds();
+        // let hoursminutes = hours+':'+minutes;
 
-        if (!played) {
-            switch (hoursminutes) {
-                case "07:53" :
-                    played = true;
-                    sound.play();
-                    showReminder(hoursminutes);
-                    break;
-                case "08:53" :
-                    played = true;
-                    sound.play();
-                    showReminder(hoursminutes);
-                    break;
-                case "09:53" :
-                    played = true;
-                    sound.play();
-                    showReminder(hoursminutes);
-                    break;
-                case "10:53" :
-                    played = true;
-                    sound.play();
-                    showReminder(hoursminutes);
-                    break;
-                case "11:53" :
-                    played = true;
-                    sound.play();
-                    showReminder(hoursminutes);
-                    break;
-                case "13:53" :
-                    played = true;
-                    sound.play();
-                    showReminder(hoursminutes);
-                    break;
-                case "14:53" :
-                    played = true;
-                    sound.play();
-                    showReminder(hoursminutes);
-                    break;
-                case "15:51" :
-                    played = true;
-                    sound.play();
-                    showReminder(hoursminutes);
-                    break;
-                case "16:53" :
-                    played = true;
-                    sound.play();
-                    showReminder(hoursminutes);
-                    break;
-            }
-        }
+        // if (!played) {
+        //     switch (hoursminutes) {
+        //         case "07:53" :
+        //             played = true;
+        //             sound.play();
+        //             showReminder(hoursminutes);
+        //             break;
+        //         case "08:53" :
+        //             played = true;
+        //             sound.play();
+        //             showReminder(hoursminutes);
+        //             break;
+        //         case "09:53" :
+        //             played = true;
+        //             sound.play();
+        //             showReminder(hoursminutes);
+        //             break;
+        //         case "10:53" :
+        //             played = true;
+        //             sound.play();
+        //             showReminder(hoursminutes);
+        //             break;
+        //         case "11:53" :
+        //             played = true;
+        //             sound.play();
+        //             showReminder(hoursminutes);
+        //             break;
+        //         case "13:53" :
+        //             played = true;
+        //             sound.play();
+        //             showReminder(hoursminutes);
+        //             break;
+        //         case "14:53" :
+        //             played = true;
+        //             sound.play();
+        //             showReminder(hoursminutes);
+        //             break;
+        //         case "15:51" :
+        //             played = true;
+        //             sound.play();
+        //             showReminder(hoursminutes);
+        //             break;
+        //         case "16:53" :
+        //             played = true;
+        //             sound.play();
+        //             showReminder(hoursminutes);
+        //             break;
+        //     }
+        // }
 
-        if (seconds == "0") {
-            played = false;
-        }
+        // if (seconds == "0") {
+        //     played = false;
+        // }
     }, 1000);
 }
