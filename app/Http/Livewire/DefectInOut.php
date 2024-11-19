@@ -1018,9 +1018,9 @@ class DefectInOut extends Component
         leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
         leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
         leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_defects.id")->
-        where("output_defect_in_out.status", "defect")->
+        where("output_defects.defect_status", "defect")->
         where("output_defect_types.allocation", Auth::user()->Groupp)->
-        whereNotNull("output_defect_in_out.id");
+        whereNull("output_defect_in_out.id");
         if ($this->defectInSearch) {
             $defectInQuery->whereRaw("(
                 master_plan.tgl_plan LIKE '%".$this->defectInSearch."%' OR
@@ -1079,7 +1079,7 @@ class DefectInOut extends Component
         leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
         leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
         where("output_defect_types.allocation", Auth::user()->Groupp)->
-        where("output_defect_in_out.status", "reworked")->
+        where("output_defect_in_out.status", "defect")->
         where("output_defect_in_out.type", Auth::user()->Groupp);
         if ($this->defectOutSearch) {
             $defectOutQuery->whereRaw("(
@@ -1146,7 +1146,7 @@ class DefectInOut extends Component
             leftJoin("output_defect_areas", "output_defect_areas.id", "=", "output_defects.defect_area_id")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             where("output_defect_in_out.type", Auth::user()->Groupp)->
-            where("output_defects.updated_at", ">=", $this->date." 00:00:00");
+            whereBetween("output_defects.updated_at", [$this->date." 00:00:00", $this->date." 23:59:59"]);
 
             if ($this->defectInOutSearch) {
                 $defectInOutQuery->whereRaw("(

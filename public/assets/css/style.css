@@ -191,6 +191,19 @@ input[type=number] {
     color: var(--sb-color);
 }
 
+.btn-sb-outline {
+    border-color: var(--sb-color);
+    background-color: var(--light-color);
+    color: var(--sb-color);
+}
+
+.btn-sb-outline:hover, .btn-sb-outline:focus, .btn-sb-outline.active {
+    scale: 1.03;
+    transition: 0.3s;
+    background-color: var(--sb-color);
+    color: var(--light-color);
+}
+
 .btn-sb-secondary {
     border-color: var(--sb-secondary-color);
     background-color: var(--sb-secondary-color);

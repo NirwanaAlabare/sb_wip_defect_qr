@@ -11,6 +11,7 @@
     </div>
     <div class="row g-3">
         <div class="d-flex justify-content-center gap-1">
+            <button type="button" class="btn btn-sm btn-sb-outline {{ $mode == "in-out" ? "active" : "" }}" {{ $mode == "in-out" ? "disabled" : "" }} id="button-in-out">SUM</button>
             <button type="button" class="btn btn-sm btn-defect {{ $mode == "in" ? "active" : "" }}" {{ $mode == "in" ? "disabled" : "" }} id="button-in">IN</button>
             <button type="button" class="btn btn-sm btn-rework {{ $mode == "out" ? "active" : "" }}" {{ $mode == "out" ? "disabled" : "" }} id="button-out">OUT</button>
         </div>
@@ -22,7 +23,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title text-light text-center fw-bold">{{ Auth::user()->Groupp." " }}DEFECT IN</h5>
                         <div class="d-flex align-items-center">
-                            <p class="px-3 mb-0 text-light">Total : <b>{{ $totalDefectIn }}</b></p>
+                            <h5 class="px-3 mb-0 text-light">Total : <b>{{ $totalDefectIn }}</b></h5>
                             <button class="btn btn-dark float-end" wire:click="refreshComponent()">
                                 <i class="fa-solid fa-rotate"></i>
                             </button>
@@ -112,7 +113,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title text-light text-center fw-bold">{{ Auth::user()->Groupp." " }}DEFECT OUT</h5>
                         <div class="d-flex align-items-center">
-                            <p class="px-3 mb-0 text-light">Total : <b>{{ $totalDefectOut }}</b></p>
+                            <h5 class="px-3 mb-0 text-light">Total : <b>{{ $totalDefectOut }}</b></h5>
                             <button class="btn btn-dark float-end" wire:click="refreshComponent()">
                                 <i class="fa-solid fa-rotate"></i>
                             </button>
@@ -196,13 +197,13 @@
         </div>
 
         {{-- All Defect --}}
-        <div class="col-12 col-md-12" wire:poll.30000ms>
+        <div class="col-12 col-md-12 {{ $mode != "in-out" ? 'd-none' : ''}}" wire:poll.30000ms>
             <div class="card">
                 <div class="card-header bg-sb">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title text-light text-center fw-bold">{{ Auth::user()->Groupp." " }}Defect In Out</h5>
+                        <h5 class="card-title text-light text-center fw-bold">{{ Auth::user()->Groupp." " }}Defect In Out Summary</h5>
                         <div class="d-flex align-items-center">
-                            <p class="px-3 mb-0 text-light">Total : <b>{{ $totalDefectInOut }}</b></p>
+                            <h5 class="px-3 mb-0 text-light">Total : <b>{{ $totalDefectInOut }}</b></h5>
                             <button class="btn btn-dark float-end" wire:click="refreshComponent()">
                                 <i class="fa-solid fa-rotate"></i>
                             </button>
@@ -438,6 +439,13 @@
                 await clearDefectInScan();
 
                 @this.changeMode("out")
+            })
+
+            $('#button-in-out').on('click', async function (e) {
+                await clearDefectOutScan();
+                await clearDefectInScan();
+
+                @this.changeMode("in-out")
             })
         });
 
