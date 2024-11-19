@@ -18,6 +18,8 @@ class DefectInOut extends Component
 
     protected $paginationTheme = 'bootstrap';
 
+    public $date;
+
     public $lines;
     public $orders;
 
@@ -65,12 +67,27 @@ class DefectInOut extends Component
 
     public $mode;
 
+    public $productTypeImage;
+    public $defectPositionX;
+    public $defectPositionY;
+
     public $loadingMasterPlan;
 
     public $baseUrl;
 
+    public $listeners = [
+        'setDate' => 'setDate',
+        'hideDefectAreaImageClear' => 'hideDefectAreaImage'
+    ];
+
+    public function setDate($date)
+    {
+        $this->date = $date;
+    }
+
     public function mount()
     {
+        $this->date = date('Y-m-d');
         $this->mode = 'in';
         $this->lines = null;
         $this->orders = null;
@@ -103,6 +120,10 @@ class DefectInOut extends Component
 
         $this->scannedDefectIn = null;
         $this->scannedDefectOut = null;
+
+        $this->productTypeImage = null;
+        $this->defectPositionX = null;
+        $this->defectPositionY = null;
 
         $this->loadingMasterPlan = false;
         $this->baseUrl = url('/');
@@ -955,6 +976,22 @@ class DefectInOut extends Component
         $this->emit('hideModal', 'defectOut');
     }
 
+    public function showDefectAreaImage($productTypeImage, $x, $y)
+    {
+        $this->productTypeImage = $productTypeImage;
+        $this->defectPositionX = $x;
+        $this->defectPositionY = $y;
+
+        $this->emit('showDefectAreaImage', $this->productTypeImage, $this->defectPositionX, $this->defectPositionY);
+    }
+
+    public function hideDefectAreaImage()
+    {
+        $this->productTypeImage = null;
+        $this->defectPositionX = null;
+        $this->defectPositionY = null;
+    }
+
     public function render()
     {
         $this->loadingMasterPlan = false;
@@ -997,8 +1034,8 @@ class DefectInOut extends Component
                 so_det.size LIKE '%".$this->defectInSearch."%'
             )");
         }
-        if ($this->defectInDate) {
-            $defectInQuery->whereRaw("output_defect_in_out.updated_at >= '".$this->defectInDate." 00:00:00' and output_defect_in_out.updated_at <= '".$this->defectInDate." 23:59:59'");
+        if ($this->date) {
+            $defectInQuery->whereRaw("output_defect_in_out.updated_at >= '".$this->date." 00:00:00' and output_defect_in_out.updated_at <= '".$this->date." 23:59:59'");
         }
         if ($this->defectInLine) {
             $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
@@ -1057,8 +1094,8 @@ class DefectInOut extends Component
                 so_det.size LIKE '%".$this->defectOutSearch."%'
             )");
         }
-        if ($this->defectOutDate) {
-            $defectOutQuery->whereRaw("output_defect_in_out.updated_at >= '".$this->defectOutDate." 00:00:00' and output_defect_in_out.updated_at <= '".$this->defectOutDate." 23:59:59'");
+        if ($this->date) {
+            $defectOutQuery->whereRaw("output_defect_in_out.updated_at >= '".$this->date." 00:00:00' and output_defect_in_out.updated_at <= '".$this->date." 23:59:59'");
         }
         if ($this->defectOutLine) {
             $defectInQuery->where("master_plan.sewing_line", $this->defectOutLine);
@@ -1096,7 +1133,10 @@ class DefectInOut extends Component
                 output_defects.defect_type_id,
                 output_defect_types.defect_type,
                 output_defect_areas.defect_area,
-                output_defect_in_out.status
+                output_defect_in_out.status,
+                master_plan.gambar,
+                output_defects.defect_area_x,
+                output_defects.defect_area_y
             ")->
             leftJoin("output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
             leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
@@ -1106,7 +1146,7 @@ class DefectInOut extends Component
             leftJoin("output_defect_areas", "output_defect_areas.id", "=", "output_defects.defect_area_id")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             where("output_defect_in_out.type", Auth::user()->Groupp)->
-            where("output_defects.updated_at", ">=", date('Y-m-d')." 00:00:00");
+            where("output_defects.updated_at", ">=", $this->date." 00:00:00");
 
             if ($this->defectInOutSearch) {
                 $defectInOutQuery->whereRaw("(

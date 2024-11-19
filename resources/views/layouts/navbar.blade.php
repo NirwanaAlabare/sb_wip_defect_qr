@@ -58,23 +58,23 @@
 @push('scripts')
     <script>
         // Set Date Event
-        // let tanggal = document.getElementById("tanggal");
-        // if (tanggal) {
-        //     let tanggalValue = tanggal.value;
-        //     let isChanged = function() {
-        //         if(tanggal.value !== tanggalValue){
-        //             tanggalValue=tanggal.value;
-        //             return true;
-        //         };
+        let tanggal = document.getElementById("tanggal");
+        if (tanggal) {
+            let tanggalValue = tanggal.value;
+            let isChanged = function() {
+                if(tanggal.value !== tanggalValue){
+                    tanggalValue=tanggal.value;
+                    return true;
+                };
 
-        //         return false;
-        //     };
+                return false;
+            };
 
-        //     tanggal.addEventListener("change", function() {
-        //         if(isChanged()) {
-        //             Livewire.emit('setDate', tanggalValue);
-        //         }
-        //     });
-        // }
+            tanggal.addEventListener("change", function() {
+                if(isChanged()) {
+                    Livewire.emit('setDate', tanggalValue);
+                }
+            });
+        }
     </script>
 @endpush
