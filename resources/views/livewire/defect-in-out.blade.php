@@ -37,15 +37,21 @@
                             {{-- <input type="text" class="qty-input h-100" id="scannedItemDefectIn" name="scannedItemDefectIn"> --}}
                         </div>
                         <div class="col-md-8">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <input type="text" class="form-control form-control-sm my-3" wire:model="defectInSearch" placeholder="Search...">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control form-control-sm" wire:model="defectInSearch" placeholder="Search...">
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select form-select-sm" name="defectInOutputType" id="defect-in-output-type" wire:model="defectInOutputType">
+                                        <option value="qc">QC</option>
+                                        <option value="packing">PACKING</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-3 d-none">
-                                    <button type="button" class="btn btn-sm btn-rework w-100 my-3 fw-bold" wire:click="saveAllDefectIn">ALL DEFECT OUT</button>
+                                    <button type="button" class="btn btn-sm btn-rework w-100 fw-bold" wire:click="saveAllDefectIn">ALL DEFECT OUT</button>
                                 </div>
                             </div>
-                            <div class="table-responsive-md" style="max-height: 200px; overflow-y: auto;">
+                            <div class="table-responsive-md" style="max-height: 300px; overflow-y: auto;">
                                 <table class="table table-sm table-bordered w-100">
                                     <thead>
                                         <tr class="text-center align-middle">
@@ -56,6 +62,7 @@
                                             <th>Size</th>
                                             <th>Type</th>
                                             <th>Qty</th>
+                                            <th>Output</th>
                                             <th>Waktu</th>
                                             {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-in-select-all" onclick="defectInSelectAll(this)" style="scale: 1.3"></th>
                                             <th>IN</th> --}}
@@ -64,7 +71,7 @@
                                     <tbody>
                                         @if (count($defectInList) < 1)
                                             <tr class="text-center align-middle">
-                                                <td colspan="8" class="text-center">Data tidak ditemukan</td>
+                                                <td colspan="9" class="text-center">Data tidak ditemukan</td>
                                             </tr>
                                         @else
                                             @foreach ($defectInList as $defectIn)
@@ -85,6 +92,7 @@
                                                     <td>{{ $defectIn->size }}</td>
                                                     <td>{{ $defectIn->defect_type }}</td>
                                                     <td>{{ $defectIn->defect_qty }}</td>
+                                                    <td class="fw-bold {{ $defectIn->output_type == "qc" ? "text-danger" : "text-success" }}">{{ strtoupper($defectIn->output_type) }}</td>
                                                     <td>{{ $defectIn->updated_at }}</td>
                                                     {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}" style="scale: 1.3" {{ $thisDefectInChecked && $thisDefectInChecked->count() > 0 ? "checked" : ""  }} onchange="defectInCheck(this)"></td>
                                                     <td><button class="btn btn-sm btn-defect fw-bold" wire:click='preSaveSelectedDefectIn("{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}")'>IN</button></td> --}}
@@ -127,15 +135,21 @@
                             {{-- <input type="text" class="qty-input h-100" id="scannedItemDefectOut" name="scannedItemDefectOut"> --}}
                         </div>
                         <div class="col-md-8">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <input type="text" class="form-control form-control-sm my-3" wire:model="defectOutSearch" placeholder="Search...">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control form-control-sm" wire:model="defectOutSearch" placeholder="Search...">
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select form-select-sm" name="defectOutOutputType" id="defect-out-output-type" wire:model="defectOutOutputType">
+                                        <option value="qc">QC</option>
+                                        <option value="packing">PACKING</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-3 d-none">
-                                    <button type="button" class="btn btn-sm btn-rework w-100 my-3 fw-bold" wire:click="saveAllDefectOut">ALL DEFECT OUT</button>
+                                    <button type="button" class="btn btn-sm btn-rework w-100 fw-bold" wire:click="saveAllDefectOut">ALL DEFECT OUT</button>
                                 </div>
                             </div>
-                            <div class="table-responsive-md" style="max-height: 200px; overflow-y: auto;">
+                            <div class="table-responsive-md" style="max-height: 300px; overflow-y: auto;">
                                 <table class="table table-sm table-bordered w-100">
                                     <thead>
                                         <tr class="text-center align-middle">
@@ -146,6 +160,7 @@
                                             <th>Size</th>
                                             <th>Type</th>
                                             <th>Qty</th>
+                                            <th>Output</th>
                                             <th>Waktu</th>
                                             {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-out-select-all" onchange="defectOutSelectAll(this)" style="scale: 1.3"></th>
                                             <th>IN</th> --}}
@@ -154,7 +169,7 @@
                                     <tbody>
                                         @if (count($defectOutList) < 1)
                                             <tr class="text-center align-middle">
-                                                <td colspan="8" class="text-center">Data tidak ditemukan</td>
+                                                <td colspan="9" class="text-center">Data tidak ditemukan</td>
                                             </tr>
                                         @else
                                             @foreach ($defectOutList as $defectOut)
@@ -175,6 +190,7 @@
                                                     <td>{{ $defectOut->size }}</td>
                                                     <td>{{ $defectOut->defect_type }}</td>
                                                     <td>{{ $defectOut->defect_qty }}</td>
+                                                    <td class="fw-bold {{ $defectOut->output_type == "qc" ? "text-danger" : "text-success" }}">{{ strtoupper($defectOut->output_type) }}</td>
                                                     <td>{{ $defectOut->updated_at }}</td>
                                                     {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}" style="scale: 1.3" {{ $thisDefectOutChecked && $thisDefectOutChecked->count() > 0 ? "checked" : ""  }} onchange="defectOutCheck(this)"></td>
                                                     <td><button class="btn btn-sm btn-rework fw-bold" wire:click="preSaveSelectedDefectOut('{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}')">OUT</button></td> --}}
@@ -229,6 +245,7 @@
                                     <th>Date OUT</th>
                                     <th>Time OUT</th>
                                     <th>Line</th>
+                                    <th>Output</th>
                                     <th>QR</th>
                                     <th>No. WS</th>
                                     <th>Style</th>
@@ -254,6 +271,7 @@
                                             <td class="text-nowrap">{{ $defectInOut->date_out }}</td>
                                             <td class="text-nowrap">{{ $defectInOut->time_out }}</td>
                                             <td class="text-nowrap">{{ strtoupper(str_replace("_", " ", $defectInOut->sewing_line)) }}</td>
+                                            <td class="text-nowrap fw-bold {{ $defectInOut->output_type == 'qc' ? 'text-danger' : 'text-success' }}">{{ strtoupper($defectInOut->output_type) }}</td>
                                             <td class="text-nowrap">{{ $defectInOut->kode_numbering }}</td>
                                             <td class="text-nowrap">{{ $defectInOut->ws }}</td>
                                             <td class="text-nowrap">{{ $defectInOut->style }}</td>
@@ -294,7 +312,7 @@
         document.addEventListener("DOMContentLoaded", async function () {
             async function defectInOnScanSuccess(decodedText, decodedResult) {
                 // handle the scanned code as you like, for example:
-                await clearDefectOutScan();
+                await clearDefectInScan();
 
                 // set kode_numbering
                 @this.scannedDefectIn = decodedText;

@@ -16,8 +16,10 @@ class DefectInOut extends Model
     protected $fillable = [
         'id',
         'defect_id',
+        'kode_numbering',
         'status',
         'type',
+        'output_type',
         'created_by',
         'created_at',
         'updated_at',
