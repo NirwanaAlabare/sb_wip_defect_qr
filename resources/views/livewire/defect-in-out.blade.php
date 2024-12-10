@@ -245,7 +245,7 @@
                                     <th>Date OUT</th>
                                     <th>Time OUT</th>
                                     <th>Line</th>
-                                    <th>Departement</th>
+                                    <th>Department</th>
                                     <th>QR</th>
                                     <th>No. WS</th>
                                     <th>Style</th>
