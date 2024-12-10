@@ -30,4 +30,9 @@ class DefectInOut extends Model
     {
         return $this->hasOne(Defect::class, 'id', 'defect_id');
     }
+
+    public function defectPacking()
+    {
+        return $this->hasOne(DefectPacking::class, 'id', 'defect_id');
+    }
 }

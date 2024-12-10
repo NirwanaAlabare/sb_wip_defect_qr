@@ -347,11 +347,9 @@ class DefectInOut extends Component
                 act_costing.styleno as style,
                 master_plan.color as color,
                 output_defects_packing.defect_type_id,
-                output_defects_packing.kode_numbering,
                 output_defect_types.defect_type,
                 output_defects_packing.so_det_id,
                 so_det.size,
-                output_defects_packing.updated_at,
                 'packing' output_type,
                 COUNT(output_defects_packing.id) defect_qty
             ")->
@@ -393,7 +391,7 @@ class DefectInOut extends Component
                 $defectInQuery->where("output_defects_packing.defect_type_id", $this->defectInSelectedType);
             }
             $defectIn = $defectInQuery->
-                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects_packing.so_det_id", "output_defects_packing.kode_numbering");
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects_packing.so_det_id");
         } else {
             $defectInQuery = Defect::selectRaw("
                 master_plan.id master_plan_id,
@@ -403,11 +401,9 @@ class DefectInOut extends Component
                 act_costing.styleno as style,
                 master_plan.color as color,
                 output_defects.defect_type_id,
-                output_defects.kode_numbering,
                 output_defect_types.defect_type,
                 output_defects.so_det_id,
                 so_det.size,
-                output_defects.updated_at,
                 'qc' output_type,
                 COUNT(output_defects.id) defect_qty
             ")->
@@ -449,7 +445,7 @@ class DefectInOut extends Component
                 $defectInQuery->where("output_defects.defect_type_id", $this->defectInSelectedType);
             }
             $defectIn = $defectInQuery->
-                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defects.kode_numbering");
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id");
         }
 
         $defectInList = $defectIn->orderBy("sewing_line")->
@@ -471,9 +467,7 @@ class DefectInOut extends Component
             output_defect_types.defect_type,
             output_defects.so_det_id,
             output_defect_in_out.output_type,
-            output_defects.kode_numbering,
             so_det.size,
-            output_defect_in_out.updated_at,
             COUNT(output_defect_in_out.id) defect_qty
         ")->
         leftJoin("output_defects".($this->defectOutOutputType == 'packing' ? '_packing' : '')." as output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
@@ -512,7 +506,7 @@ class DefectInOut extends Component
             $defectOutQuery->where("output_defects.defect_type_id", $this->defectOutSelectedType);
         }
         $defectOutList = $defectOutQuery->
-            groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defect_in_out.output_type", "output_defect_in_out.kode_numbering",)->
+            groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defect_in_out.output_type")->
             orderBy("master_plan.sewing_line")->
             orderBy("master_plan.id_ws")->
             orderBy("master_plan.color")->
@@ -521,136 +515,12 @@ class DefectInOut extends Component
             paginate(10, ['*'], 'defectOutPage');
 
         // All Defect
-        $defectInOutQuery = DefectInOutModel::selectRaw("
-                DATE(output_defect_in_out.created_at) date_in,
-                TIME(output_defect_in_out.created_at) time_in,
-                DATE(output_defect_in_out.reworked_at) date_out,
-                TIME(output_defect_in_out.reworked_at) time_out,
-                COALESCE(output_defects.sewing_line, output_defects_packing.sewing_line) sewing_line,
-                COALESCE(output_defects.kode_numbering, output_defects_packing.kode_numbering) kode_numbering,
-                COALESCE(output_defects.kpno, output_defects_packing.kpno) as ws,
-                COALESCE(output_defects.styleno, output_defects_packing.styleno) as style,
-                COALESCE(output_defects.color, output_defects_packing.color) as color,
-                COALESCE(output_defects.size, output_defects_packing.size) size,
-                COALESCE(output_defects.defect_type_id, output_defects_packing.defect_type_id) defect_type_id,
-                COALESCE(output_defects.defect_type, output_defects_packing.defect_type) defect_type,
-                COALESCE(output_defects.defect_area, output_defects_packing.defect_area) defect_area,
-                output_defect_in_out.status,
-                output_defect_in_out.output_type,
-                COALESCE(output_defects.gambar, output_defects_packing.gambar) gambar,
-                COALESCE(output_defects.defect_area_x, output_defects_packing.defect_area_x) defect_area_x,
-                COALESCE(output_defects.defect_area_y, output_defects_packing.defect_area_y) defect_area_y
-            ")->
-            leftJoin(DB::raw("
-                (
-                    select
-                        output_defects.id,
-                        output_defects.so_det_id,
-                        output_defects.kode_numbering,
-                        output_defects.defect_type_id,
-                        output_defects.defect_area_x,
-                        output_defects.defect_area_y,
-                        output_defect_types.defect_type,
-                        output_defect_areas.defect_area,
-                        master_plan.id_ws,
-                        master_plan.sewing_line,
-                        act_costing.kpno,
-                        act_costing.styleno,
-                        master_plan.color,
-                        master_plan.gambar,
-                        so_det.size
-                    from
-                        output_defects as output_defects
-                        left join master_plan on master_plan.id = output_defects.master_plan_id
-                        left join act_costing on act_costing.id = master_plan.id_ws
-                        left join so_det on so_det.id = output_defects.so_det_id
-                        left join output_defect_types on output_defect_types.id = output_defects.defect_type_id
-                        left join output_defect_areas on output_defect_areas.id = output_defects.defect_area_id
-                    where
-                        output_defects.updated_at between '".date('Y-m-d'.strtotime($this->date." -7 days"))." 00:00:00' and '".$this->date." 23:59:59'
-                        and
-                        output_defect_types.allocation = '".Auth::user()->Groupp."'
-                ) output_defects
-            "), function($join){
-                $join->on("output_defects.id", "=", "output_defect_in_out.defect_id");
-                $join->on("output_defect_in_out.output_type", "=", DB::raw("'qc'"));
-            })->
-            leftJoin(DB::raw("
-                (
-                    select
-                        output_defects_packing.id,
-                        output_defects_packing.so_det_id,
-                        output_defects_packing.kode_numbering,
-                        output_defects_packing.defect_type_id,
-                        output_defects_packing.defect_area_x,
-                        output_defects_packing.defect_area_y,
-                        output_defect_types.defect_type,
-                        output_defect_areas.defect_area,
-                        master_plan.id_ws,
-                        master_plan.sewing_line,
-                        act_costing.kpno,
-                        act_costing.styleno,
-                        master_plan.color,
-                        master_plan.gambar,
-                        so_det.size
-                    from
-                        output_defects_packing
-                        left join master_plan on master_plan.id = output_defects_packing.master_plan_id
-                        left join act_costing on act_costing.id = master_plan.id_ws
-                        left join so_det on so_det.id = output_defects_packing.so_det_id
-                        left join output_defect_types on output_defect_types.id = output_defects_packing.defect_type_id
-                        left join output_defect_areas on output_defect_areas.id = output_defects_packing.defect_area_id
-                    where
-                        output_defects_packing.updated_at between '".date('Y-m-d'.strtotime($this->date." -7 days"))." 00:00:00' and '".$this->date." 23:59:59'
-                        and
-                        output_defect_types.allocation = '".Auth::user()->Groupp."'
-                ) output_defects_packing
-            "), function($join){
-                $join->on("output_defects_packing.id", "=", "output_defect_in_out.defect_id");
-                $join->on("output_defect_in_out.output_type", "=", DB::raw("'packing'"));
-            })->
-            whereRaw("(
-                output_defect_in_out.created_at between '".$this->date." 00:00:00' and '".$this->date." 23:59:59' OR
-                output_defect_in_out.updated_at between '".$this->date." 00:00:00' and '".$this->date." 23:59:59' OR
-                output_defect_in_out.reworked_at between '".$this->date." 00:00:00' and '".$this->date." 23:59:59'
-            )")->
-            where("output_defect_in_out.type", Auth::user()->Groupp);
+        $defectInOutList = DefectInOutModel::
+            whereBetween("updated_at", [$this->date." 00:00:00", $this->date." 23:59:59"])->
+            orderBy("output_defect_in_out.updated_at", "desc")->
+            paginate(10, ['*'], 'defectInOutPage');
 
-            if ($this->defectInOutSearch) {
-                $defectInOutQuery->whereRaw("(
-                    output_defects.sewing_line LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects_packing.sewing_line LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects.kpno LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects_packing.kpno LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects.styleno LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects_packing.styleno LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects.color LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects_packing.color LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects.kode_numbering LIKE '%".$this->defectInSearch."%' OR
-                    output_defects_packing.kode_numbering LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects.defect_type LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects_packing.defect_type LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defect_in_out.updated_at LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects.size LIKE '%".$this->defectInOutSearch."%' OR
-                    output_defects_packing.size LIKE '%".$this->defectInOutSearch."%'
-                )");
-            }
-
-            $defectInOutList = $defectInOutQuery->
-                groupBy("output_defect_in_out.id")->
-                orderBy("output_defects.sewing_line")->
-                orderBy("output_defects_packing.sewing_line")->
-                orderBy("output_defects.id_ws")->
-                orderBy("output_defects_packing.id_ws")->
-                orderBy("output_defects.color")->
-                orderBy("output_defects_packing.color")->
-                orderBy("output_defects.defect_type")->
-                orderBy("output_defects_packing.defect_type")->
-                orderBy("output_defects.so_det_id")->
-                orderBy("output_defects_packing.so_det_id")->
-                paginate(10, ['*'], 'defectInOutPage');
-
-        return view('livewire.defect-in-out', ["defectInList" => $defectInList, "defectOutList" => $defectOutList, "totalDefectIn" => $defectInList->count(), "totalDefectOut" => $defectOutList->count(), "defectInOutList" => $defectInOutList, "totalDefectInOut" => $defectInOutList->count()]);
+        return view('livewire.defect-in-out', ["defectInList" => $defectInList, "defectOutList" => $defectOutList, "defectInOutList" => $defectInOutList, "totalDefectIn" => $defectInList->count(), "totalDefectOut" => $defectOutList->count(), "totalDefectInOut" => $defectInOutList->count()]);
     }
 
     public function refreshComponent()

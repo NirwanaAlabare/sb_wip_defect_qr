@@ -57,4 +57,8 @@ class DefectPacking extends Model
     {
         return $this->hasOne(Undo::class, 'output_defect_id', 'id');
     }
+    public function soDet()
+    {
+        return $this->belongsTo(SoDet::class, 'so_det_id', 'id');
+    }
 }

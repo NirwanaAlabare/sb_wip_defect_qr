@@ -56,14 +56,14 @@
                                     <thead>
                                         <tr class="text-center align-middle">
                                             <th>No.</th>
-                                            <th>Kode</th>
+                                            {{-- <th>Kode</th> --}}
                                             <th>Line</th>
                                             <th>Master Plan</th>
                                             <th>Size</th>
                                             <th>Type</th>
                                             <th>Qty</th>
                                             <th>Output</th>
-                                            <th>Waktu</th>
+                                            {{-- <th>Waktu</th> --}}
                                             {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-in-select-all" onclick="defectInSelectAll(this)" style="scale: 1.3"></th>
                                             <th>IN</th> --}}
                                         </tr>
@@ -86,14 +86,14 @@
                                                 @endphp
                                                 <tr class="text-center align-middle" wire:key='defect-in-{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}'>
                                                     <td>{{ $defectInList->firstItem() + $loop->index }}</td>
-                                                    <td>{{ $defectIn->kode_numbering }}</td>
+                                                    {{-- <td>{{ $defectIn->kode_numbering }}</td> --}}
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectIn->sewing_line)) }}</td>
                                                     <td>{{ $defectIn->ws }}<br>{{ $defectIn->style }}<br>{{ $defectIn->color }}</td>
                                                     <td>{{ $defectIn->size }}</td>
                                                     <td>{{ $defectIn->defect_type }}</td>
                                                     <td>{{ $defectIn->defect_qty }}</td>
                                                     <td class="fw-bold {{ $defectIn->output_type == "qc" ? "text-danger" : "text-success" }}">{{ strtoupper($defectIn->output_type) }}</td>
-                                                    <td>{{ $defectIn->updated_at }}</td>
+                                                    {{-- <td>{{ $defectIn->updated_at }}</td> --}}
                                                     {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}" style="scale: 1.3" {{ $thisDefectInChecked && $thisDefectInChecked->count() > 0 ? "checked" : ""  }} onchange="defectInCheck(this)"></td>
                                                     <td><button class="btn btn-sm btn-defect fw-bold" wire:click='preSaveSelectedDefectIn("{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}")'>IN</button></td> --}}
                                                 </tr>
@@ -154,14 +154,14 @@
                                     <thead>
                                         <tr class="text-center align-middle">
                                             <th>No.</th>
-                                            <th>Kode</th>
+                                            {{-- <th>Kode</th> --}}
                                             <th>Line</th>
                                             <th>Master Plan</th>
                                             <th>Size</th>
                                             <th>Type</th>
                                             <th>Qty</th>
                                             <th>Output</th>
-                                            <th>Waktu</th>
+                                            {{-- <th>Waktu</th> --}}
                                             {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-out-select-all" onchange="defectOutSelectAll(this)" style="scale: 1.3"></th>
                                             <th>IN</th> --}}
                                         </tr>
@@ -184,14 +184,14 @@
                                                 @endphp
                                                 <tr class="text-center align-middle" wire:key='defect-out-{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}'>
                                                     <td>{{ $defectOutList->firstItem() + $loop->index }}</td>
-                                                    <td>{{ $defectOut->kode_numbering }}</td>
+                                                    {{-- <td>{{ $defectOut->kode_numbering }}</td> --}}
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectOut->sewing_line)) }}</td>
                                                     <td>{{ $defectOut->ws }}<br>{{ $defectOut->style }}<br>{{ $defectOut->color }}</td>
                                                     <td>{{ $defectOut->size }}</td>
                                                     <td>{{ $defectOut->defect_type }}</td>
                                                     <td>{{ $defectOut->defect_qty }}</td>
                                                     <td class="fw-bold {{ $defectOut->output_type == "qc" ? "text-danger" : "text-success" }}">{{ strtoupper($defectOut->output_type) }}</td>
-                                                    <td>{{ $defectOut->updated_at }}</td>
+                                                    {{-- <td>{{ $defectOut->updated_at }}</td> --}}
                                                     {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}" style="scale: 1.3" {{ $thisDefectOutChecked && $thisDefectOutChecked->count() > 0 ? "checked" : ""  }} onchange="defectOutCheck(this)"></td>
                                                     <td><button class="btn btn-sm btn-rework fw-bold" wire:click="preSaveSelectedDefectOut('{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}')">OUT</button></td> --}}
                                                 </tr>
@@ -264,24 +264,52 @@
                                     </tr>
                                 @else
                                     @foreach ($defectInOutList as $defectInOut)
-                                        <tr class="text-center align-middle">
-                                            <td class="text-nowrap">{{ $defectInOutList->firstItem() + $loop->index }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->date_in }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->time_in }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->date_out }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->time_out }}</td>
-                                            <td class="text-nowrap">{{ strtoupper(str_replace("_", " ", $defectInOut->sewing_line)) }}</td>
-                                            <td class="text-nowrap fw-bold {{ $defectInOut->output_type == 'qc' ? 'text-danger' : 'text-success' }}">{{ strtoupper($defectInOut->output_type) }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->kode_numbering }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->ws }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->style }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->color }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->size }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->defect_type }}</td>
-                                            <td class="text-nowrap">{{ $defectInOut->defect_area }}</td>
-                                            <td class="text-nowrap"><button class="btn btn-dark" wire:click="showDefectAreaImage('{{$defectInOut->gambar}}', {{$defectInOut->defect_area_x}}, {{$defectInOut->defect_area_y}})"><i class="fa fa-image"></i></button></td>
-                                            <td class="text-nowrap">{{ $defectInOut->status == "reworked" ? "DONE" : ($defectInOut->status == "defect" ? "PROCESS" : '-') }}</td>
-                                        </tr>
+                                        @php
+                                            $show = false;
+
+                                            $currentDefect = null;
+
+                                            if ($defectInOut->output_type == "packing") {
+                                                $currentDefect = $defectInOut->defectPacking;
+                                            } else {
+                                                $currentDefect = $defectInOut->defect;
+                                            }
+
+                                            if (
+                                                str_contains(strtolower($currentDefect->kode_numbering), strtolower($defectInOutSearch)) ||
+                                                str_contains(strtolower($currentDefect->soDet->so->actCosting->kpno), strtolower($defectInOutSearch)) ||
+                                                str_contains(strtolower($currentDefect->soDet->so->actCosting->styleno), strtolower($defectInOutSearch)) ||
+                                                str_contains(strtolower($currentDefect->soDet->color), strtolower($defectInOutSearch)) ||
+                                                str_contains(strtolower($currentDefect->soDet->size), strtolower($defectInOutSearch)) ||
+                                                str_contains(strtolower($currentDefect->defectType->defect_type), strtolower($defectInOutSearch)) ||
+                                                str_contains(strtolower($currentDefect->defectArea->defect_area), strtolower($defectInOutSearch)) ||
+                                                str_contains(strtolower(str_replace("_", " ", $currentDefect->masterPlan->sewing_line)), strtolower($defectInOutSearch)) ||
+                                                str_contains(strtolower($defectInOut->status == "reworked" ? "DONE" : 'PROCESS'), strtolower($defectInOutSearch)) ||
+                                                str_contains(strtolower($defectInOut->output_type), strtolower($defectInOutSearch))
+                                            ) {
+                                                $show = true;
+                                            }
+                                        @endphp
+                                        @if ($show)
+                                            <tr class="text-center align-middle">
+                                                <td class="text-nowrap">{{ $defectInOutList->firstItem() + $loop->index }}</td>
+                                                <td class="text-nowrap">{{ $defectInOut->created_at ? date('Y-m-d', strtotime($defectInOut->created_at)) : '' }}</td>
+                                                <td class="text-nowrap">{{ $defectInOut->created_at ? date('H:i:s', strtotime($defectInOut->created_at)) : '' }}</td>
+                                                <td class="text-nowrap">{{ $defectInOut->reworked_at ? date('Y-m-d', strtotime($defectInOut->reworked_at)) : '' }}</td>
+                                                <td class="text-nowrap">{{ $defectInOut->reworked_at ? date('H:i:s', strtotime($defectInOut->reworked_at)) : '' }}</td>
+                                                <td class="text-nowrap">{{ strtoupper(str_replace("_", " ", $currentDefect->masterPlan->sewing_line)) }}</td>
+                                                <td class="text-nowrap fw-bold {{ $defectInOut->output_type == 'qc' ? 'text-danger' : 'text-success' }}">{{ strtoupper($defectInOut->output_type) }}</td>
+                                                <td class="text-nowrap">{{ $currentDefect->kode_numbering }}</td>
+                                                <td class="text-nowrap">{{ $currentDefect->soDet->so->actCosting->kpno }}</td>
+                                                <td class="text-nowrap">{{ $currentDefect->soDet->so->actCosting->styleno }}</td>
+                                                <td class="text-nowrap">{{ $currentDefect->soDet->color }}</td>
+                                                <td class="text-nowrap">{{ $currentDefect->soDet->size }}</td>
+                                                <td class="text-nowrap">{{ $currentDefect->defectType->defect_type }}</td>
+                                                <td class="text-nowrap">{{ $currentDefect->defectArea->defect_area }}</td>
+                                                <td class="text-nowrap"><button class="btn btn-dark" wire:click="showDefectAreaImage('{{$currentDefect->masterPlan->gambar}}', {{$currentDefect->defect_area_x}}, {{$currentDefect->defect_area_y}})"><i class="fa fa-image"></i></button></td>
+                                                <td class="text-nowrap">{{ $defectInOut->status == "reworked" ? "DONE" : ($defectInOut->status == "defect" ? "PROCESS" : '-') }}</td>
+                                            </tr>
+                                        @endif
                                     @endforeach
                                 @endif
                             </tbody>
