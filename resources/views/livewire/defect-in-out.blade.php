@@ -62,7 +62,7 @@
                                             <th>Size</th>
                                             <th>Type</th>
                                             <th>Qty</th>
-                                            <th>Output</th>
+                                            <th>Dept.</th>
                                             {{-- <th>Waktu</th> --}}
                                             {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-in-select-all" onclick="defectInSelectAll(this)" style="scale: 1.3"></th>
                                             <th>IN</th> --}}
@@ -160,7 +160,7 @@
                                             <th>Size</th>
                                             <th>Type</th>
                                             <th>Qty</th>
-                                            <th>Output</th>
+                                            <th>Dept.</th>
                                             {{-- <th>Waktu</th> --}}
                                             {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-out-select-all" onchange="defectOutSelectAll(this)" style="scale: 1.3"></th>
                                             <th>IN</th> --}}
@@ -245,7 +245,7 @@
                                     <th>Date OUT</th>
                                     <th>Time OUT</th>
                                     <th>Line</th>
-                                    <th>Output</th>
+                                    <th>Departement</th>
                                     <th>QR</th>
                                     <th>No. WS</th>
                                     <th>Style</th>
