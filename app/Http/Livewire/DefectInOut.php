@@ -361,6 +361,7 @@ class DefectInOut extends Component
                 $join->on("output_defect_in_out.defect_id", "=", "output_defects_packing.id");
                 $join->on("output_defect_in_out.output_type", "=", DB::raw("'packing'"));
             })->
+            whereNotNull("master_plan.id")->
             where("output_defects_packing.defect_status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             whereNull("output_defect_in_out.id");
@@ -375,9 +376,9 @@ class DefectInOut extends Component
                     so_det.size LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            if ($this->defectInDate) {
-                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            }
+            // if ($this->defectInDate) {
+            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            // }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -415,6 +416,7 @@ class DefectInOut extends Component
                 $join->on("output_defect_in_out.defect_id", "=", "output_defects.id");
                 $join->on("output_defect_in_out.output_type", "=", DB::raw("'qc'"));
             })->
+            whereNotNull("master_plan.id")->
             where("output_defects.defect_status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             whereNull("output_defect_in_out.id");
@@ -429,9 +431,9 @@ class DefectInOut extends Component
                     so_det.size LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            if ($this->defectInDate) {
-                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            }
+            // if ($this->defectInDate) {
+            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            // }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -494,7 +496,7 @@ class DefectInOut extends Component
             $defectOutQuery->where("master_plan.tgl_plan", $this->defectOutDate);
         }
         if ($this->defectOutLine) {
-            $defectInQuery->where("master_plan.sewing_line", $this->defectOutLine);
+            $defectOutQuery->where("master_plan.sewing_line", $this->defectOutLine);
         }
         if ($this->defectOutSelectedMasterPlan) {
             $defectOutQuery->where("master_plan.id", $this->defectOutSelectedMasterPlan);
@@ -520,7 +522,14 @@ class DefectInOut extends Component
             orderBy("output_defect_in_out.updated_at", "desc")->
             paginate(10, ['*'], 'defectInOutPage');
 
-        return view('livewire.defect-in-out', ["defectInList" => $defectInList, "defectOutList" => $defectOutList, "defectInOutList" => $defectInOutList, "totalDefectIn" => $defectInList->count(), "totalDefectOut" => $defectOutList->count(), "totalDefectInOut" => $defectInOutList->count()]);
+        return view('livewire.defect-in-out', [
+            "defectInList" => $defectInList,
+            "defectOutList" => $defectOutList,
+            "defectInOutList" => $defectInOutList,
+            "totalDefectIn" => $defectInList->count(),
+            "totalDefectOut" => $defectOutList->count(),
+            "totalDefectInOut" => $defectInOutList->count()
+        ]);
     }
 
     public function refreshComponent()
