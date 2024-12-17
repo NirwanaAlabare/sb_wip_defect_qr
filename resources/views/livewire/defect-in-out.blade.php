@@ -33,30 +33,47 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4" wire:ignore>
-                            <div id="defect-in-reader" width="600px" class="h-100"></div>
+                            <div id="defect-in-reader" width="600px"></div>
                             {{-- <input type="text" class="qty-input h-100" id="scannedItemDefectIn" name="scannedItemDefectIn"> --}}
                         </div>
                         <div class="col-md-8">
                             <div class="row g-3 mb-3">
-                                <div class="col-md-8">
+                                <div class="col-md-5">
                                     <input type="text" class="form-control form-control-sm" wire:model="defectInSearch" placeholder="Search...">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <select class="form-select form-select-sm" name="defectInOutputType" id="defect-in-output-type" wire:model="defectInOutputType">
                                         <option value="qc">QC</option>
                                         <option value="packing">PACKING</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select form-select-sm" name="defectInLine" id="defect-in-line" wire:model="defectInLine">
+                                        <option value="" selected>Pilih Line</option>
+                                        @foreach ($lines as $line)
+                                            <option value="{{ $line->username }}">{{ str_replace("_", " ", $line->username) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select form-select-sm" name="defectInShowPage" id="defect-in-show-page" wire:model="defectInShowPage">
+                                        <option value="10">Show 10</option>
+                                        <option value="25">Show 25</option>
+                                        <option value="50">Show 50</option>
+                                        <option value="100">Show 100</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3 d-none">
                                     <button type="button" class="btn btn-sm btn-rework w-100 fw-bold" wire:click="saveAllDefectIn">ALL DEFECT OUT</button>
                                 </div>
                             </div>
-                            <div class="table-responsive-md" style="max-height: 300px; overflow-y: auto;">
+                            <div class="table-responsive-md" style="max-height: 400px; overflow-y: auto;">
                                 <table class="table table-sm table-bordered w-100">
                                     <thead>
                                         <tr class="text-center align-middle">
                                             <th>No.</th>
                                             {{-- <th>Kode</th> --}}
+                                            <th>Waktu</th>
                                             <th>Line</th>
                                             <th>Master Plan</th>
                                             <th>Size</th>
@@ -87,6 +104,7 @@
                                                 <tr class="text-center align-middle" wire:key='defect-in-{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}'>
                                                     <td>{{ $defectInList->firstItem() + $loop->index }}</td>
                                                     {{-- <td>{{ $defectIn->kode_numbering }}</td> --}}
+                                                    <td>{{ $defectIn->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectIn->sewing_line)) }}</td>
                                                     <td>{{ $defectIn->ws }}<br>{{ $defectIn->style }}<br>{{ $defectIn->color }}</td>
                                                     <td>{{ $defectIn->size }}</td>
@@ -131,30 +149,47 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4" wire:ignore>
-                            <div id="defect-out-reader" width="600px" class="h-100"></div>
+                            <div id="defect-out-reader" width="600px"></div>
                             {{-- <input type="text" class="qty-input h-100" id="scannedItemDefectOut" name="scannedItemDefectOut"> --}}
                         </div>
                         <div class="col-md-8">
                             <div class="row mb-3">
-                                <div class="col-md-8">
+                                <div class="col-md-5">
                                     <input type="text" class="form-control form-control-sm" wire:model="defectOutSearch" placeholder="Search...">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <select class="form-select form-select-sm" name="defectOutOutputType" id="defect-out-output-type" wire:model="defectOutOutputType">
                                         <option value="qc">QC</option>
                                         <option value="packing">PACKING</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select form-select-sm" name="defectOutLine" id="defect-out-line" wire:model="defectOutLine">
+                                        <option value="" selected>Pilih Line</option>
+                                        @foreach ($lines as $line)
+                                            <option value="{{ $line->username }}">{{ str_replace("_", " ", $line->username) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select form-select-sm" name="defectOutShowPage" id="defect-out-show-page" wire:model="defectOutShowPage">
+                                        <option value="10">Show 10</option>
+                                        <option value="25">Show 25</option>
+                                        <option value="50">Show 50</option>
+                                        <option value="100">Show 100</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3 d-none">
                                     <button type="button" class="btn btn-sm btn-rework w-100 fw-bold" wire:click="saveAllDefectOut">ALL DEFECT OUT</button>
                                 </div>
                             </div>
-                            <div class="table-responsive-md" style="max-height: 300px; overflow-y: auto;">
+                            <div class="table-responsive-md" style="max-height: 400px; overflow-y: auto;">
                                 <table class="table table-sm table-bordered w-100">
                                     <thead>
                                         <tr class="text-center align-middle">
                                             <th>No.</th>
                                             {{-- <th>Kode</th> --}}
+                                            <th>Waktu</th>
                                             <th>Line</th>
                                             <th>Master Plan</th>
                                             <th>Size</th>
@@ -185,6 +220,7 @@
                                                 <tr class="text-center align-middle" wire:key='defect-out-{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}'>
                                                     <td>{{ $defectOutList->firstItem() + $loop->index }}</td>
                                                     {{-- <td>{{ $defectOut->kode_numbering }}</td> --}}
+                                                    <td>{{ $defectOut->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectOut->sewing_line)) }}</td>
                                                     <td>{{ $defectOut->ws }}<br>{{ $defectOut->style }}<br>{{ $defectOut->color }}</td>
                                                     <td>{{ $defectOut->size }}</td>
@@ -227,9 +263,17 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-12">
+                    <div class="row align-items-center">
+                        <div class="col-md-10">
                             <input type="text" class="form-control form-control-sm my-3" wire:model="defectInOutSearch" placeholder="Search...">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select form-select-sm my-3" name="defectInOutShowPage" id="defect-in-out-show-page" wire:model="defectInOutShowPage">
+                                <option value="10">Show 10</option>
+                                <option value="25">Show 25</option>
+                                <option value="50">Show 50</option>
+                                <option value="100">Show 100</option>
+                            </select>
                         </div>
                         <div class="col-md-3 d-none">
                             <button type="button" class="btn btn-sm btn-rework w-100 my-3 fw-bold" wire:click="saveAllDefectIn">ALL DEFECT OUT</button>
@@ -260,7 +304,7 @@
                             <tbody>
                                 @if ($defectInOutList->count() < 1)
                                     <tr class="text-center align-middle">
-                                        <td colspan="15" class="text-center">Data tidak ditemukan</td>
+                                        <td colspan="16" class="text-center">Data tidak ditemukan</td>
                                     </tr>
                                 @else
                                     @foreach ($defectInOutList as $defectInOut)

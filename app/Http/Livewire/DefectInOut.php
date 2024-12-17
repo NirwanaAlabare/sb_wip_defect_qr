@@ -24,6 +24,7 @@ class DefectInOut extends Component
     public $lines;
     public $orders;
 
+    public $defectInShowPage;
     public $defectInDate;
     public $defectInLine;
     public $defectInQty;
@@ -38,6 +39,7 @@ class DefectInOut extends Component
     public $defectInAreaModal;
     public $defectInQtyModal;
 
+    public $defectOutShowPage;
     public $defectOutDate;
     public $defectOutLine;
     public $defectOutQty;
@@ -55,6 +57,7 @@ class DefectInOut extends Component
     public $defectInMasterPlanOutput;
     public $defectOutMasterPlanOutput;
 
+    public $defectInOutShowPage;
     public $defectInSelectedMasterPlan;
     public $defectInSelectedSize;
     public $defectInSelectedType;
@@ -100,6 +103,7 @@ class DefectInOut extends Component
         $this->orders = null;
 
         // Defect In init value
+        $this->defectInShowPage = 10;
         $this->defectInOutputType = 'qc';
         $this->defectInDate = date('Y-m-d');
         $this->defectInLine = null;
@@ -114,6 +118,7 @@ class DefectInOut extends Component
         $this->defectInListAllChecked = null;
 
         // Defect Out init value
+        $this->defectOutShowPage = 10;
         $this->defectOutOutputType = 'qc';
         $this->defectOutDate = date('Y-m-d');
         $this->defectOutLine = null;
@@ -349,6 +354,7 @@ class DefectInOut extends Component
                 output_defects_packing.defect_type_id,
                 output_defect_types.defect_type,
                 output_defects_packing.so_det_id,
+                output_defects_packing.updated_at as defect_time,
                 so_det.size,
                 'packing' output_type,
                 COUNT(output_defects_packing.id) defect_qty
@@ -404,6 +410,7 @@ class DefectInOut extends Component
                 output_defects.defect_type_id,
                 output_defect_types.defect_type,
                 output_defects.so_det_id,
+                output_defects.updated_at as defect_time,
                 so_det.size,
                 'qc' output_type,
                 COUNT(output_defects.id) defect_qty
@@ -450,13 +457,15 @@ class DefectInOut extends Component
                 groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id");
         }
 
+        $defectInTotal = $defectIn->get()->sum("defect_qty");
+
         $defectInList = $defectIn->orderBy("sewing_line")->
             orderBy("id_ws")->
             orderBy("color")->
             orderBy("defect_type")->
             orderBy("so_det_id")->
             orderBy("output_type")->
-            paginate(10, ['*'], 'defectInPage');
+            paginate($this->defectInShowPage, ['*'], 'defectInPage');
 
         $defectOutQuery = DefectInOutModel::selectRaw("
             master_plan.id master_plan_id,
@@ -469,6 +478,7 @@ class DefectInOut extends Component
             output_defect_types.defect_type,
             output_defects.so_det_id,
             output_defect_in_out.output_type,
+            output_defect_in_out.updated_at as defect_time,
             so_det.size,
             COUNT(output_defect_in_out.id) defect_qty
         ")->
@@ -493,7 +503,7 @@ class DefectInOut extends Component
             )");
         }
         if ($this->defectOutDate) {
-            $defectOutQuery->where("master_plan.tgl_plan", $this->defectOutDate);
+            $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$this->defectOutDate." 00:00:00", $this->defectOutDate." 23:59:59"]);
         }
         if ($this->defectOutLine) {
             $defectOutQuery->where("master_plan.sewing_line", $this->defectOutLine);
@@ -507,6 +517,9 @@ class DefectInOut extends Component
         if ($this->defectOutSelectedType) {
             $defectOutQuery->where("output_defects.defect_type_id", $this->defectOutSelectedType);
         }
+
+        $defectOutTotal = $defectOutQuery->get()->sum("defect_qty");
+
         $defectOutList = $defectOutQuery->
             groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defect_in_out.output_type")->
             orderBy("master_plan.sewing_line")->
@@ -514,21 +527,25 @@ class DefectInOut extends Component
             orderBy("master_plan.color")->
             orderBy("output_defect_types.defect_type")->
             orderBy("output_defects.so_det_id")->
-            paginate(10, ['*'], 'defectOutPage');
+            paginate($this->defectOutShowPage, ['*'], 'defectOutPage');
 
         // All Defect
-        $defectInOutList = DefectInOutModel::
-            whereBetween("updated_at", [$this->date." 00:00:00", $this->date." 23:59:59"])->
+        $defectInOutQuery = DefectInOutModel::
+            whereBetween("updated_at", [$this->date." 00:00:00", $this->date." 23:59:59"]);
+
+        $defectInOutTotal = $defectInOutQuery->get()->count();
+
+        $defectInOutList = $defectInOutQuery->
             orderBy("output_defect_in_out.updated_at", "desc")->
-            paginate(10, ['*'], 'defectInOutPage');
+            paginate($this->defectInOutShowPage, ['*'], 'defectInOutPage');
 
         return view('livewire.defect-in-out', [
             "defectInList" => $defectInList,
             "defectOutList" => $defectOutList,
             "defectInOutList" => $defectInOutList,
-            "totalDefectIn" => $defectInList->count(),
-            "totalDefectOut" => $defectOutList->count(),
-            "totalDefectInOut" => $defectInOutList->count()
+            "totalDefectIn" => $defectInTotal,
+            "totalDefectOut" => $defectOutTotal,
+            "totalDefectInOut" => $defectInOutTotal
         ]);
     }
 
