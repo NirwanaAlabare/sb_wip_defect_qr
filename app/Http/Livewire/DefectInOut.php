@@ -536,6 +536,7 @@ class DefectInOut extends Component
 
         // All Defect
         $defectInOutQuery = DefectInOutModel::
+            where("type", Auth::user()->Groupp)->
             whereBetween("updated_at", [date("Y-m-d", strtotime($this->date." -7 days"))." 00:00:00", $this->date." 23:59:59"]);
 
         $defectInOutTotal = $defectInOutQuery->get()->count();
