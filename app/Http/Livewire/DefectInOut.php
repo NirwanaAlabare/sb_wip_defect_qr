@@ -135,6 +135,8 @@ class DefectInOut extends Component
         $this->scannedDefectIn = null;
         $this->scannedDefectOut = null;
 
+        $this->defectInOutShowPage = 10;
+
         $this->productTypeImage = null;
         $this->defectPositionX = null;
         $this->defectPositionY = null;
@@ -505,9 +507,9 @@ class DefectInOut extends Component
                 so_det.size LIKE '%".$this->defectOutSearch."%'
             )");
         }
-        if ($this->defectOutDate) {
-            $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$this->defectOutDate." 00:00:00", $this->defectOutDate." 23:59:59"]);
-        }
+        // if ($this->defectOutDate) {
+        //     $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$this->defectOutDate." 00:00:00", $this->defectOutDate." 23:59:59"]);
+        // }
         if ($this->defectOutLine) {
             $defectOutQuery->where("master_plan.sewing_line", $this->defectOutLine);
         }
@@ -534,7 +536,7 @@ class DefectInOut extends Component
 
         // All Defect
         $defectInOutQuery = DefectInOutModel::
-            whereBetween("updated_at", [$this->date." 00:00:00", $this->date." 23:59:59"]);
+            whereBetween("updated_at", [date("Y-m-d", strtotime($this->date." -7 days"))." 00:00:00", $this->date." 23:59:59"]);
 
         $defectInOutTotal = $defectInOutQuery->get()->count();
 
