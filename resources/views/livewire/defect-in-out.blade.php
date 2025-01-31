@@ -72,7 +72,7 @@
                                     <thead>
                                         <tr class="text-center align-middle">
                                             <th>No.</th>
-                                            {{-- <th>Kode</th> --}}
+                                            <th>Kode</th>
                                             <th>Waktu</th>
                                             <th>Line</th>
                                             <th>Master Plan</th>
@@ -103,7 +103,7 @@
                                                 @endphp
                                                 <tr class="text-center align-middle" wire:key='defect-in-{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}'>
                                                     <td>{{ $defectInList->firstItem() + $loop->index }}</td>
-                                                    {{-- <td>{{ $defectIn->kode_numbering }}</td> --}}
+                                                    <td>{{ $defectIn->kode_numbering }}</td>
                                                     <td>{{ $defectIn->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectIn->sewing_line)) }}</td>
                                                     <td>{{ $defectIn->ws }}<br>{{ $defectIn->style }}<br>{{ $defectIn->color }}</td>
@@ -188,7 +188,7 @@
                                     <thead>
                                         <tr class="text-center align-middle">
                                             <th>No.</th>
-                                            {{-- <th>Kode</th> --}}
+                                            <th>Kode</th>
                                             <th>Waktu</th>
                                             <th>Line</th>
                                             <th>Master Plan</th>
@@ -219,7 +219,7 @@
                                                 @endphp
                                                 <tr class="text-center align-middle" wire:key='defect-out-{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}'>
                                                     <td>{{ $defectOutList->firstItem() + $loop->index }}</td>
-                                                    {{-- <td>{{ $defectOut->kode_numbering }}</td> --}}
+                                                    <td>{{ $defectOut->kode_numbering }}</td>
                                                     <td>{{ $defectOut->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectOut->sewing_line)) }}</td>
                                                     <td>{{ $defectOut->ws }}<br>{{ $defectOut->style }}<br>{{ $defectOut->color }}</td>

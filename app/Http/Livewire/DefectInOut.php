@@ -356,6 +356,7 @@ class DefectInOut extends Component
                 act_costing.kpno as ws,
                 act_costing.styleno as style,
                 master_plan.color as color,
+                output_defects_packing.kode_numbering,
                 output_defects_packing.defect_type_id,
                 output_defect_types.defect_type,
                 output_defects_packing.so_det_id,
@@ -404,7 +405,7 @@ class DefectInOut extends Component
                 $defectInQuery->where("output_defects_packing.defect_type_id", $this->defectInSelectedType);
             }
             $defectIn = $defectInQuery->
-                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects_packing.so_det_id");
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects_packing.so_det_id", "output_defects_packing.kode_numbering");
         } else {
             $defectInQuery = Defect::selectRaw("
                 master_plan.id master_plan_id,
@@ -413,6 +414,7 @@ class DefectInOut extends Component
                 act_costing.kpno as ws,
                 act_costing.styleno as style,
                 master_plan.color as color,
+                output_defects.kode_numbering,
                 output_defects.defect_type_id,
                 output_defect_types.defect_type,
                 output_defects.so_det_id,
@@ -461,7 +463,7 @@ class DefectInOut extends Component
                 $defectInQuery->where("output_defects.defect_type_id", $this->defectInSelectedType);
             }
             $defectIn = $defectInQuery->
-                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id");
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defects.kode_numbering");
         }
 
         $defectInTotal = $defectIn->get()->sum("defect_qty");
@@ -484,6 +486,7 @@ class DefectInOut extends Component
             output_defects.defect_type_id,
             output_defect_types.defect_type,
             output_defects.so_det_id,
+            output_defect_in_out.kode_numbering,
             output_defect_in_out.output_type,
             output_defect_in_out.updated_at as defect_time,
             so_det.size,
@@ -529,7 +532,7 @@ class DefectInOut extends Component
         $defectOutTotal = $defectOutQuery->get()->sum("defect_qty");
 
         $defectOutList = $defectOutQuery->
-            groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defect_in_out.output_type")->
+            groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defect_in_out.output_type", "output_defect_in_out.kode_numbering")->
             orderBy("master_plan.sewing_line")->
             orderBy("master_plan.id_ws")->
             orderBy("master_plan.color")->
