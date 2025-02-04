@@ -253,6 +253,13 @@ class DefectInOutController extends Controller
             leftJoin("master_plan as master_plan_packing", "master_plan_packing.id", "=", "output_defects_packing.master_plan_id")->
             where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
             whereBetween("output_defect_in_out.updated_at", [$request->tanggal." 00:00:00", $request->tanggal." 23:59:59"])->
+            whereRaw("
+                (
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE master_plan.sewing_line END) LIKE '%".$request->line."%'
+                    AND
+                    output_defect_in_out.output_type LIKE '%".$request->departemen."%'
+                )
+            ")->
             groupBy("output_defect_in_out.id")->
             get();
 

@@ -423,13 +423,34 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="mb-3">
                                 <label class="form-label">Tanggal</label>
                                 <input type="text" class="form-control" id="defectInOutDetailDate" readonly>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">Line</label>
+                                <select class="form-select select2-defect-in-out-modal" id="defectInOutDetailLine" onchange="defectInOutDetailReload()">
+                                    <option value="" selected>All Line</option>
+                                    @foreach ($lines as $line)
+                                        <option value="{{ $line->username }}">{{ str_replace("_", " ", $line->username) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">Department</label>
+                                <select class="form-select select2-defect-in-out-modal" id="defectInOutDetailDepartment" onchange="defectInOutDetailReload()">
+                                    <option value="">All Department</option>
+                                    <option value="qc">QC</option>
+                                    <option value="packing">Packing</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="mb-3">
                                 <label class="form-label">Total</label>
                                 <input type="text" class="form-control" id="defectInOutDetailQty" readonly>
@@ -501,6 +522,13 @@
                 theme: "bootstrap-5",
                 width: $( this ).data( 'width' ) ? $( this ).data( 'width' ) : $( this ).hasClass( 'w-100' ) ? '100%' : 'style',
                 placeholder: $( this ).data( 'placeholder' ),
+            });
+
+            $('.select2-defect-in-out-modal').select2({
+                theme: "bootstrap-5",
+                width: $( this ).data( 'width' ) ? $( this ).data( 'width' ) : $( this ).hasClass( 'w-100' ) ? '100%' : 'style',
+                placeholder: $( this ).data( 'placeholder' ),
+                dropdownParent: $('#defect-in-out-modal')
             });
 
             $('#select-defect-in-line').on('change', function (e) {
@@ -983,6 +1011,8 @@
                 url: '{{ route('get-defect-in-out-detail') }}',
                 data: function (d) {
                     d.tanggal = $("#defectInOutDetailDate").val();
+                    d.line = $("#defectInOutDetailLine").val();
+                    d.departemen = $("#defectInOutDetailDepartment").val();
                 },
                 dataType: 'json',
             },
