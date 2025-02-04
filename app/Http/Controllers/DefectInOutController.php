@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\SignalBit\MasterPlan;
 use App\Models\SignalBit\Defect;
+use App\Models\SignalBit\DefectInOut;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 use DB;
 
 class DefectInOutController extends Controller
@@ -200,5 +202,60 @@ class DefectInOutController extends Controller
             get();
 
         return $defects;
+    }
+
+    public function getDefectInOutDaily(Request $request) {
+        $defectInOutDaily = DefectInOut::selectRaw("
+                DATE(output_defect_in_out.updated_at) tanggal,
+                COUNT(output_defect_in_out.id) total_in,
+                SUM(CASE WHEN output_defect_in_out.status = 'defect' THEN 1 ELSE 0 END) total_process,
+                SUM(CASE WHEN output_defect_in_out.status = 'reworked' THEN 1 ELSE 0 END) total_out
+            ")->
+            where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
+            whereBetween("output_defect_in_out.updated_at", [date("Y-m-d", strtotime("-7 days")), date("Y-m-d")])->
+            groupByRaw("DATE(output_defect_in_out.updated_at)")->
+            get();
+
+        return DataTables::of($defectInOutDaily)->toJson();
+    }
+
+    public function getDefectInOutDetail(Request $request) {
+        $defectInOutQuery = DefectInOut::selectRaw("
+                output_defect_in_out.created_at time_in,
+                output_defect_in_out.reworked_at time_out,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE master_plan.sewing_line END) sewing_line,
+                output_defect_in_out.output_type,
+                output_defect_in_out.kode_numbering,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE act_costing.kpno END) no_ws,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE act_costing.styleno END) style,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.color ELSE so_det.color END) color,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size ELSE so_det.size END) size,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type ELSE output_defect_types.defect_type END) defect_type,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_areas_packing.defect_area ELSE output_defect_areas.defect_area END) defect_area,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.gambar ELSE master_plan.gambar END) gambar,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.defect_area_x ELSE output_defects.defect_area_x END) defect_area_x,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.defect_area_y ELSE output_defects.defect_area_y END) defect_area_y,
+                output_defect_in_out.status
+            ")->
+            leftJoin("output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
+            leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
+            leftJoin("output_defect_areas", "output_defect_areas.id", "=", "output_defects.defect_area_id")->
+            leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
+            leftJoin("so", "so.id", "=", "so_det.id_so")->
+            leftJoin("act_costing", "act_costing.id", "=", "so.id_cost")->
+            leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
+            leftJoin("output_defects_packing", "output_defects_packing.id", "=", "output_defect_in_out.defect_id")->
+            leftJoin("output_defect_types as output_defect_types_packing", "output_defect_types_packing.id", "=", "output_defects_packing.defect_type_id")->
+            leftJoin("output_defect_areas as output_defect_areas_packing", "output_defect_areas_packing.id", "=", "output_defects_packing.defect_area_id")->
+            leftJoin("so_det as so_det_packing", "so_det_packing.id", "=", "output_defects_packing.so_det_id")->
+            leftJoin("so as so_packing", "so_packing.id", "=", "so_det_packing.id_so")->
+            leftJoin("act_costing as act_costing_packing", "act_costing_packing.id", "=", "so_packing.id_cost")->
+            leftJoin("master_plan as master_plan_packing", "master_plan_packing.id", "=", "output_defects_packing.master_plan_id")->
+            where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
+            whereBetween("output_defect_in_out.updated_at", [$request->tanggal." 00:00:00", $request->tanggal." 23:59:59"])->
+            groupBy("output_defect_in_out.id")->
+            get();
+
+            return DataTables::of($defectInOutQuery)->toJson();
     }
 }

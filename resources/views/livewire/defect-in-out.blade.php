@@ -248,8 +248,8 @@
             </div>
         </div>
 
-        {{-- All Defect --}}
-        <div class="col-12 col-md-12 {{ $mode != "in-out" ? 'd-none' : ''}}" wire:poll.30000ms>
+        {{-- All Defect Legacy --}}
+        {{-- <div class="col-12 col-md-12 {{ $mode != "in-out" ? 'd-none' : ''}}" wire:poll.30000ms>
             <div class="card">
                 <div class="card-header bg-sb">
                     <div class="d-flex justify-content-between align-items-center">
@@ -362,6 +362,41 @@
                     </div>
                 </div>
             </div>
+        </div> --}}
+
+        {{-- All Defect --}}
+        <div class="col-12 col-md-12 {{ $mode != "in-out" ? 'd-none' : ''}}">
+            <div class="card">
+                <div class="card-header bg-sb">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title text-light text-center fw-bold">{{ Auth::user()->Groupp." " }}Defect In Out Summary</h5>
+                        <div class="d-flex align-items-center">
+                            <h5 class="px-3 mb-0 text-light">Total : <b>{{ $totalDefectInOut }}</b></h5>
+                            <button class="btn btn-dark float-end" wire:click="refreshComponent()" onclick="defectInOutReload()">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div>
+                        <div class="table-responsive" wire:ignore>
+                            <table class="table table-bordered w-100" id="defect-in-out-table" >
+                                <thead>
+                                    <tr>
+                                        <th>Action</th>
+                                        <th>Date</th>
+                                        <th>Total IN</th>
+                                        <th>Total PROCESS</th>
+                                        <th>Total OUT</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -377,9 +412,74 @@
             </div>
         </div>
     </div>
+
+    {{-- Defect In Out Detail Modal --}}
+    <div class="modal" tabindex="-1" id="defect-in-out-modal" wire:ignore>
+        <div class="modal-dialog modal-dialog-scrollable modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header bg-sb text-light fw-bold">
+                    <h5 class="modal-title">Defect In Out</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tanggal</label>
+                                <input type="text" class="form-control" id="defectInOutDetailDate" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Total</label>
+                                <input type="text" class="form-control" id="defectInOutDetailQty" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+                                <table class="table table-bordered w-100" id="defect-in-out-detail-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Time IN</th>
+                                            <th>Time OUT</th>
+                                            <th>Line</th>
+                                            <th>Dept.</th>
+                                            <th>QR</th>
+                                            <th>No. WS</th>
+                                            <th>Style</th>
+                                            <th>Color</th>
+                                            <th>Size</th>
+                                            <th>Type</th>
+                                            <th>Area</th>
+                                            <th>Image</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
+    <!-- DataTables -->
+    <link rel="stylesheet" href="{{ asset('datatables/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('datatables/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('datatables/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('datatables/datatables-rowgroup/css/rowGroup.bootstrap4.min.css') }}">
+
+    {{-- DataTables --}}
+    <script src="{{ asset('datatables/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('datatables/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('datatables/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('datatables/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", async function () {
             async function defectInOnScanSuccess(decodedText, decodedResult) {
@@ -828,6 +928,165 @@
             hideDefectAreaImage();
 
             Livewire.emit('hideDefectAreaImageClear');
+        }
+
+        let defectInOutDatatable = $("#defect-in-out-table").DataTable({
+            serverSide: true,
+            processing: true,
+            ordering: false,
+            pageLength: 50,
+            ajax: {
+                url: '{{ route('get-defect-in-out-daily') }}',
+                dataType: 'json',
+            },
+            columns: [
+                {
+                    data: 'tanggal',
+                },
+                {
+                    data: 'tanggal',
+                },
+                {
+                    data: 'total_in',
+                },
+                {
+                    data: 'total_process',
+                },
+                {
+                    data: 'total_out',
+                }
+            ],
+            columnDefs: [
+                {
+                    targets: [0],
+                    render: (data, type, row, meta) => {
+                        return `<button type='button' class='btn btn-sb-secondary btn-sm' onclick='getDefectInOutDetail("`+data+`")'><i class='fa fa-search'></i></button>`
+                    }
+                },
+                {
+                    targets: "_all",
+                    className: "text-nowrap align-middle"
+                },
+            ],
+        });
+
+        function defectInOutReload() {
+            $("#defect-in-out-table").DataTable().ajax.reload();
+        }
+
+        let defectInOutDetailDatatable = $("#defect-in-out-detail-table").DataTable({
+            serverSide: true,
+            processing: true,
+            ordering: false,
+            pageLength: 50,
+            ajax: {
+                url: '{{ route('get-defect-in-out-detail') }}',
+                data: function (d) {
+                    d.tanggal = $("#defectInOutDetailDate").val();
+                },
+                dataType: 'json',
+            },
+            columns: [
+                {
+                    data: 'time_in',
+                },
+                {
+                    data: 'time_out',
+                },
+                {
+                    data: 'sewing_line',
+                },
+                {
+                    data: 'output_type',
+                },
+                {
+                    data: 'kode_numbering',
+                },
+                {
+                    data: 'no_ws',
+                },
+                {
+                    data: 'style',
+                },
+                {
+                    data: 'color',
+                },
+                {
+                    data: 'size',
+                },
+                {
+                    data: 'defect_type',
+                },
+                {
+                    data: 'defect_area',
+                },
+                {
+                    data: 'gambar',
+                },
+                {
+                    data: 'status',
+                },
+            ],
+            columnDefs: [
+                {
+                    targets: [2],
+                    render: (data, type, row, meta) => {
+                        return data ? data.replace("_", " ").toUpperCase() : '-';
+                    }
+                },
+                {
+                    targets: [3],
+                    render: (data, type, row, meta) => {
+                        let textColor = '';
+
+                        if (data == "packing") {
+                            textColor = "text-success";
+                        } else {
+                            textColor = "text-danger";
+                        }
+
+                        return `<span class="`+textColor+` fw-bold">`+(data ? data.toUpperCase() : '-')+`</span>`;
+                    }
+                },
+                {
+                    targets: [11],
+                    render: (data, type, row, meta) => {
+                        return `<button class="btn btn-dark" onclick="onShowDefectAreaImage('`+row.gambar+`', `+row.defect_area_x+`, `+row.defect_area_y+`)"><i class="fa fa-image"></i></button>`
+                    }
+                },
+                {
+                    targets: [12],
+                    render: (data, type, row, meta) => {
+                        let textColor = '';
+
+                        if (data == "reworked") {
+                            textColor = "text-rework";
+                        } else {
+                            textColor = "text-defect";
+                        }
+
+                        return `<span class="`+textColor+` fw-bold">`+(data ? data.toUpperCase() : '-')+`</span>`;
+                    }
+                },
+                {
+                    targets: "_all",
+                    className: "text-nowrap align-middle"
+                },
+            ],
+        });
+
+        function defectInOutDetailReload() {
+            $("#defect-in-out-detail-table").DataTable().ajax.reload(() => {
+                $("#defectInOutDetailQty").val(defectInOutDetailDatatable.page.info().recordsTotal);
+            });
+        }
+
+        async function getDefectInOutDetail(tanggal) {
+            $("#defectInOutDetailDate").val(tanggal);
+
+            defectInOutDetailReload();
+
+            $("#defect-in-out-modal").modal("show");
         }
     </script>
 @endpush

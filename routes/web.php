@@ -37,6 +37,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/get-size', 'getSize')->name("get-size");
         Route::get('/get-defect-type', 'getDefectType')->name("get-defect-type");
         Route::get('/get-defect-area', 'getDefectArea')->name("get-defect-area");
+        Route::get('/get-defect-in-out-daily', 'getDefectInOutDaily')->name("get-defect-in-out-daily");
+        Route::get('/get-defect-in-out-detail', 'getDefectInOutDetail')->name("get-defect-in-out-detail");
     });
 
     Route::controller(ProductionController::class)->prefix('production-panel')->group(function () {

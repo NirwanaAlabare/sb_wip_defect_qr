@@ -44,6 +44,14 @@ html, body {
     transition: 0.3s;
 }
 
+table.dataTable {
+    border-collapse: collapse !important;
+}
+
+table.dataTable tbody, td, tfoot, th, thead, tr {
+    border-width: 1px;
+}
+
 .pagination .page-item > .page-link {
     color: #212529 !important;
 }
