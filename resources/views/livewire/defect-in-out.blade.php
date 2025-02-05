@@ -33,8 +33,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4" wire:ignore>
-                            <div id="defect-in-reader" width="600px"></div>
-                            {{-- <input type="text" class="qty-input h-100" id="scannedItemDefectIn" name="scannedItemDefectIn"> --}}
+                            <input type="text" class="qty-input border h-100" id="scannedItemDefectIn" name="scannedItemDefectIn">
                         </div>
                         <div class="col-md-8">
                             <div class="row g-3 mb-3">
@@ -101,8 +100,8 @@
                                                         });
                                                     }
                                                 @endphp
-                                                <tr class="text-center align-middle" wire:key='defect-in-{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}'>
-                                                    <td>{{ $defectInList->firstItem() + $loop->index }}</td>
+                                                <tr class="text-center align-middle">
+                                                    <td>{{ $loop->index+1 }}</td>
                                                     <td>{{ $defectIn->kode_numbering }}</td>
                                                     <td>{{ $defectIn->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectIn->sewing_line)) }}</td>
@@ -119,7 +118,7 @@
                                         @endif
                                     </tbody>
                                 </table>
-                                {{ $defectInList->links() }}
+                                {{-- {{ $defectInList->links() }} --}}
                                 {{-- <div class="row justify-content-end mt-3">
                                     <div class="col-md-3">
                                         <button class="btn btn-defect btn-sm fw-bold w-100" wire:click='saveCheckedDefectIn()'>CHECKED DEFECT IN</button>
@@ -149,8 +148,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4" wire:ignore>
-                            <div id="defect-out-reader" width="600px"></div>
-                            {{-- <input type="text" class="qty-input h-100" id="scannedItemDefectOut" name="scannedItemDefectOut"> --}}
+                            <input type="text" class="qty-input border h-100" id="scannedItemDefectOut" name="scannedItemDefectOut">
                         </div>
                         <div class="col-md-8">
                             <div class="row mb-3">
@@ -217,8 +215,8 @@
                                                         });
                                                     }
                                                 @endphp
-                                                <tr class="text-center align-middle" wire:key='defect-out-{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}'>
-                                                    <td>{{ $defectOutList->firstItem() + $loop->index }}</td>
+                                                <tr class="text-center align-middle">
+                                                    <td>{{ $loop->index+1 }}</td>
                                                     <td>{{ $defectOut->kode_numbering }}</td>
                                                     <td>{{ $defectOut->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectOut->sewing_line)) }}</td>
@@ -235,7 +233,7 @@
                                         @endif
                                     </tbody>
                                 </table>
-                                {{ $defectOutList->links() }}
+                                {{-- {{ $defectOutList->links() }} --}}
                                 {{-- <div class="row justify-content-end mt-3">
                                     <div class="col-md-3">
                                         <button class="btn btn-rework btn-sm fw-bold w-100" wire:click='saveCheckedDefectOut()'>CHECKED DEFECT OUT</button>
@@ -514,20 +512,7 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async function () {
-            async function defectInOnScanSuccess(decodedText, decodedResult) {
-                // handle the scanned code as you like, for example:
-                await clearDefectInScan();
-
-                // set kode_numbering
-                @this.scannedDefectIn = decodedText;
-
-                // submit
-                await @this.submitDefectIn();
-            }
-
-            document.getElementById('button-out').disabled = true;
-            await initDefectInScan(defectInOnScanSuccess);
-            document.getElementById('button-out').disabled = false;
+            document.getElementById('scannedItemDefectIn').focus();
 
             $('.select2').select2({
                 theme: "bootstrap-5",
@@ -657,65 +642,48 @@
             });
 
             $('#button-in').on('click', async function (e) {
-                await clearDefectOutScan();
-                await clearDefectInScan();
-
                 @this.changeMode("in")
             })
 
             $('#button-out').on('click', async function (e) {
-                await clearDefectOutScan();
-                await clearDefectInScan();
-
                 @this.changeMode("out")
             })
 
             $('#button-in-out').on('click', async function (e) {
-                await clearDefectOutScan();
-                await clearDefectInScan();
-
                 @this.changeMode("in-out")
             })
+        });
+
+        var scannedItemDefectIn = document.getElementById("scannedItemDefectIn");
+        scannedItemDefectIn.addEventListener("change", async function () {
+            @this.scannedDefectIn = this.value;
+
+            // submit
+            @this.submitDefectIn();
+
+            this.value = '';
+        });
+
+        var scannedItemDefectOut = document.getElementById("scannedItemDefectOut");
+        scannedItemDefectOut.addEventListener("change", async function () {
+            @this.scannedDefectOut = this.value;
+
+            // submit
+            @this.submitDefectOut();
+
+            this.value = '';
         });
 
         // init scan
         Livewire.on('qrInputFocus', async (mode) => {
             console.log(mode);
 
-            async function defectInOnScanSuccess(decodedText, decodedResult) {
-                // handle the scanned code as you like, for example:
-                await clearDefectInScan();
-
-                // set kode_numbering
-                @this.scannedDefectIn = decodedText;
-
-                // submit
-                await @this.submitDefectIn();
-
-            }
-
-            async function defectOutOnScanSuccess(decodedText, decodedResult) {
-                // handle the scanned code as you like, for example:
-                await clearDefectOutScan();
-
-                // set kode_numbering
-                @this.scannedDefectOut = decodedText;
-
-                // submit
-                await @this.submitDefectOut();
-
-            }
-
             if (mode == "in") {
-                // await clearDefectOutScan();
-                document.getElementById('button-out').disabled = true;
-                await refreshDefectInScan(defectInOnScanSuccess);
+                document.getElementById('scannedItemDefectIn').focus();
                 document.getElementById('button-out').disabled = false;
             } else if (mode == "out") {
-                // await clearDefectInScan();
-                document.getElementById('button-out').disabled = true;
-                await refreshDefectOutScan(defectOutOnScanSuccess);
-                document.getElementById('button-out').disabled = false;
+                document.getElementById('scannedItemDefectOut').focus()
+                document.getElementById('button-in').disabled = false;
             }
         });
 

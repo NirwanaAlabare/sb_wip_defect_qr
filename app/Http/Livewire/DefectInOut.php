@@ -104,6 +104,7 @@ class DefectInOut extends Component
         $this->orders = null;
 
         // Defect In init value
+        $this->defectInList = null;
         $this->defectInShowPage = 10;
         $this->defectInOutputType = 'qc';
         $this->defectInDate = date('Y-m-d');
@@ -119,6 +120,7 @@ class DefectInOut extends Component
         $this->defectInListAllChecked = null;
 
         // Defect Out init value
+        $this->defectOutList = null;
         $this->defectOutShowPage = 10;
         $this->defectOutOutputType = 'qc';
         $this->defectOutDate = date('Y-m-d');
@@ -157,30 +159,28 @@ class DefectInOut extends Component
         $this->emit('qrInputFocus', $mode);
     }
 
-    public function updatingDefectInSearch()
-    {
-        $this->resetPage("defectInPage");
-    }
+    // public function updatingDefectInSearch()
+    // {
+    //     $this->resetPage("defectInPage");
+    // }
 
-    public function updatingDefectOutSearch()
-    {
-        $this->resetPage("defectOutPage");
-    }
+    // public function updatingDefectOutSearch()
+    // {
+    //     $this->resetPage("defectOutPage");
+    // }
 
-    public function updatedPaginators($page, $pageName) {
-        if ($this->defectInListAllChecked == true) {
-            $this->selectAllDefectIn();
-        }
+    // public function updatedPaginators($page, $pageName) {
+    //     if ($this->defectInListAllChecked == true) {
+    //         $this->selectAllDefectIn();
+    //     }
 
-        if ($this->defectOutListAllChecked == true) {
-            $this->selectAllDefectOut();
-        }
-    }
+    //     if ($this->defectOutListAllChecked == true) {
+    //         $this->selectAllDefectOut();
+    //     }
+    // }
 
     public function submitDefectIn()
     {
-        $this->emit('clearDefectInScan');
-
         if ($this->scannedDefectIn) {
             if ($this->defectInOutputType == "packing") {
                 $scannedDefect = DefectPacking::selectRaw("
@@ -389,12 +389,13 @@ class DefectInOut extends Component
                     act_costing.styleno LIKE '%".$this->defectInSearch."%' OR
                     master_plan.color LIKE '%".$this->defectInSearch."%' OR
                     output_defect_types.defect_type LIKE '%".$this->defectInSearch."%' OR
-                    so_det.size LIKE '%".$this->defectInSearch."%'
+                    so_det.size LIKE '%".$this->defectInSearch."%' OR
+                    output_defects_packing.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            // if ($this->defectInDate) {
-            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            // }
+            if ($this->defectInDate) {
+                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -447,12 +448,13 @@ class DefectInOut extends Component
                     act_costing.styleno LIKE '%".$this->defectInSearch."%' OR
                     master_plan.color LIKE '%".$this->defectInSearch."%' OR
                     output_defect_types.defect_type LIKE '%".$this->defectInSearch."%' OR
-                    so_det.size LIKE '%".$this->defectInSearch."%'
+                    so_det.size LIKE '%".$this->defectInSearch."%' OR
+                    output_defects.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            // if ($this->defectInDate) {
-            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            // }
+            if ($this->defectInDate) {
+                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -469,15 +471,13 @@ class DefectInOut extends Component
                 groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defects.kode_numbering");
         }
 
-        $defectInTotal = $defectIn->get()->sum("defect_qty");
-
-        $defectInList = $defectIn->orderBy("sewing_line")->
+        $this->defectInList = $defectIn->orderBy("sewing_line")->
             orderBy("id_ws")->
             orderBy("color")->
             orderBy("defect_type")->
             orderBy("so_det_id")->
             orderBy("output_type")->
-            paginate($this->defectInShowPage, ['*'], 'defectInPage');
+            get();
 
         $defectOutQuery = DefectInOutModel::selectRaw("
             master_plan.id master_plan_id,
@@ -513,12 +513,13 @@ class DefectInOut extends Component
                 act_costing.styleno LIKE '%".$this->defectOutSearch."%' OR
                 master_plan.color LIKE '%".$this->defectOutSearch."%' OR
                 output_defect_types.defect_type LIKE '%".$this->defectOutSearch."%' OR
-                so_det.size LIKE '%".$this->defectOutSearch."%'
+                so_det.size LIKE '%".$this->defectOutSearch."%' OR
+                output_defect_in_out.kode_numbering LIKE '%".$this->defectOutSearch."%'
             )");
         }
-        // if ($this->defectOutDate) {
-        //     $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$this->defectOutDate." 00:00:00", $this->defectOutDate." 23:59:59"]);
-        // }
+        if ($this->defectOutDate) {
+            $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$this->defectOutDate." 00:00:00", $this->defectOutDate." 23:59:59"]);
+        }
         if ($this->defectOutLine) {
             $defectOutQuery->where("master_plan.sewing_line", $this->defectOutLine);
         }
@@ -530,18 +531,16 @@ class DefectInOut extends Component
         }
         if ($this->defectOutSelectedType) {
             $defectOutQuery->where("output_defects.defect_type_id", $this->defectOutSelectedType);
-        }
+        };
 
-        $defectOutTotal = $defectOutQuery->get()->sum("defect_qty");
-
-        $defectOutList = $defectOutQuery->
+        $this->defectOutList = $defectOutQuery->
             groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defect_in_out.output_type", "output_defect_in_out.kode_numbering")->
             orderBy("master_plan.sewing_line")->
             orderBy("master_plan.id_ws")->
             orderBy("master_plan.color")->
             orderBy("output_defect_types.defect_type")->
             orderBy("output_defects.so_det_id")->
-            paginate($this->defectOutShowPage, ['*'], 'defectOutPage');
+            get();
 
         // All Defect
         $defectInOutQuery = DefectInOutModel::
@@ -550,16 +549,13 @@ class DefectInOut extends Component
 
         $defectInOutTotal = $defectInOutQuery->get()->count();
 
-        $defectInOutList = $defectInOutQuery->
+        $this->defectInOutList = $defectInOutQuery->
             orderBy("output_defect_in_out.updated_at", "desc")->
-            paginate($this->defectInOutShowPage, ['*'], 'defectInOutPage');
+            get();
 
         return view('livewire.defect-in-out', [
-            "defectInList" => $defectInList,
-            "defectOutList" => $defectOutList,
-            "defectInOutList" => $defectInOutList,
-            "totalDefectIn" => $defectInTotal,
-            "totalDefectOut" => $defectOutTotal,
+            "totalDefectIn" => $this->defectInList->sum("defect_qty"),
+            "totalDefectOut" => $this->defectOutList->sum("defect_qty"),
             "totalDefectInOut" => $defectInOutTotal
         ]);
     }
