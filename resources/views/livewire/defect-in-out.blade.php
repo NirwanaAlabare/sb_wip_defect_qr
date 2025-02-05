@@ -15,7 +15,6 @@
             <button type="button" class="btn btn-sm btn-defect {{ $mode == "in" ? "active" : "" }}" {{ $mode == "in" ? "disabled" : "" }} id="button-in">IN</button>
             <button type="button" class="btn btn-sm btn-rework {{ $mode == "out" ? "active" : "" }}" {{ $mode == "out" ? "disabled" : "" }} id="button-out">OUT</button>
         </div>
-
         {{-- Defect IN --}}
         <div class="col-12 col-md-12 {{ $mode != "in" ? 'd-none' : ''}}" wire:poll.30000ms>
             <div class="card">
@@ -101,8 +100,8 @@
                                                         });
                                                     }
                                                 @endphp
-                                                <tr class="text-center align-middle" wire:key='defect-in-{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}'>
-                                                    <td>{{ $defectInList->firstItem() + $loop->index }}</td>
+                                                <tr class="text-center align-middle">
+                                                    <td>{{ 1+$loop->index }}</td>
                                                     <td>{{ $defectIn->kode_numbering }}</td>
                                                     <td>{{ $defectIn->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectIn->sewing_line)) }}</td>
@@ -119,7 +118,6 @@
                                         @endif
                                     </tbody>
                                 </table>
-                                {{ $defectInList->links() }}
                                 {{-- <div class="row justify-content-end mt-3">
                                     <div class="col-md-3">
                                         <button class="btn btn-defect btn-sm fw-bold w-100" wire:click='saveCheckedDefectIn()'>CHECKED DEFECT IN</button>
@@ -217,8 +215,8 @@
                                                         });
                                                     }
                                                 @endphp
-                                                <tr class="text-center align-middle" wire:key='defect-out-{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}'>
-                                                    <td>{{ $defectOutList->firstItem() + $loop->index }}</td>
+                                                <tr class="text-center align-middle">
+                                                    <td>{{ 1 + $loop->index }}</td>
                                                     <td>{{ $defectOut->kode_numbering }}</td>
                                                     <td>{{ $defectOut->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectOut->sewing_line)) }}</td>
@@ -235,7 +233,7 @@
                                         @endif
                                     </tbody>
                                 </table>
-                                {{ $defectOutList->links() }}
+                                {{-- {{ $defectOutList->links() }} --}}
                                 {{-- <div class="row justify-content-end mt-3">
                                     <div class="col-md-3">
                                         <button class="btn btn-rework btn-sm fw-bold w-100" wire:click='saveCheckedDefectOut()'>CHECKED DEFECT OUT</button>

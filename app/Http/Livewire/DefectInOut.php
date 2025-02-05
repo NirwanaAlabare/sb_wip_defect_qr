@@ -157,25 +157,25 @@ class DefectInOut extends Component
         $this->emit('qrInputFocus', $mode);
     }
 
-    public function updatingDefectInSearch()
-    {
-        $this->resetPage("defectInPage");
-    }
+    // public function updatingDefectInSearch()
+    // {
+    //     $this->resetPage("defectInPage");
+    // }
 
-    public function updatingDefectOutSearch()
-    {
-        $this->resetPage("defectOutPage");
-    }
+    // public function updatingDefectOutSearch()
+    // {
+    //     $this->resetPage("defectOutPage");
+    // }
 
-    public function updatedPaginators($page, $pageName) {
-        if ($this->defectInListAllChecked == true) {
-            $this->selectAllDefectIn();
-        }
+    // public function updatedPaginators($page, $pageName) {
+    //     if ($this->defectInListAllChecked == true) {
+    //         $this->selectAllDefectIn();
+    //     }
 
-        if ($this->defectOutListAllChecked == true) {
-            $this->selectAllDefectOut();
-        }
-    }
+    //     if ($this->defectOutListAllChecked == true) {
+    //         $this->selectAllDefectOut();
+    //     }
+    // }
 
     public function submitDefectIn()
     {
@@ -389,7 +389,8 @@ class DefectInOut extends Component
                     act_costing.styleno LIKE '%".$this->defectInSearch."%' OR
                     master_plan.color LIKE '%".$this->defectInSearch."%' OR
                     output_defect_types.defect_type LIKE '%".$this->defectInSearch."%' OR
-                    so_det.size LIKE '%".$this->defectInSearch."%'
+                    so_det.size LIKE '%".$this->defectInSearch."%' OR
+                    output_defects_packing.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
             // if ($this->defectInDate) {
@@ -447,7 +448,8 @@ class DefectInOut extends Component
                     act_costing.styleno LIKE '%".$this->defectInSearch."%' OR
                     master_plan.color LIKE '%".$this->defectInSearch."%' OR
                     output_defect_types.defect_type LIKE '%".$this->defectInSearch."%' OR
-                    so_det.size LIKE '%".$this->defectInSearch."%'
+                    so_det.size LIKE '%".$this->defectInSearch."%' OR
+                    output_defects.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
             // if ($this->defectInDate) {
@@ -469,15 +471,13 @@ class DefectInOut extends Component
                 groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defects.kode_numbering");
         }
 
-        $defectInTotal = $defectIn->get()->sum("defect_qty");
-
         $defectInList = $defectIn->orderBy("sewing_line")->
             orderBy("id_ws")->
             orderBy("color")->
             orderBy("defect_type")->
             orderBy("so_det_id")->
             orderBy("output_type")->
-            paginate($this->defectInShowPage, ['*'], 'defectInPage');
+            get();
 
         $defectOutQuery = DefectInOutModel::selectRaw("
             master_plan.id master_plan_id,
@@ -513,7 +513,8 @@ class DefectInOut extends Component
                 act_costing.styleno LIKE '%".$this->defectOutSearch."%' OR
                 master_plan.color LIKE '%".$this->defectOutSearch."%' OR
                 output_defect_types.defect_type LIKE '%".$this->defectOutSearch."%' OR
-                so_det.size LIKE '%".$this->defectOutSearch."%'
+                so_det.size LIKE '%".$this->defectOutSearch."%' OR
+                output_defect_in_out.kode_numbering LIKE '%".$this->defectOutSearch."%'
             )");
         }
         // if ($this->defectOutDate) {
@@ -532,8 +533,6 @@ class DefectInOut extends Component
             $defectOutQuery->where("output_defects.defect_type_id", $this->defectOutSelectedType);
         }
 
-        $defectOutTotal = $defectOutQuery->get()->sum("defect_qty");
-
         $defectOutList = $defectOutQuery->
             groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defect_in_out.output_type", "output_defect_in_out.kode_numbering")->
             orderBy("master_plan.sewing_line")->
@@ -541,7 +540,7 @@ class DefectInOut extends Component
             orderBy("master_plan.color")->
             orderBy("output_defect_types.defect_type")->
             orderBy("output_defects.so_det_id")->
-            paginate($this->defectOutShowPage, ['*'], 'defectOutPage');
+            get();
 
         // All Defect
         $defectInOutQuery = DefectInOutModel::
@@ -558,8 +557,8 @@ class DefectInOut extends Component
             "defectInList" => $defectInList,
             "defectOutList" => $defectOutList,
             "defectInOutList" => $defectInOutList,
-            "totalDefectIn" => $defectInTotal,
-            "totalDefectOut" => $defectOutTotal,
+            "totalDefectIn" => $defectInList->sum("defect_qty"),
+            "totalDefectOut" => $defectOutList->sum("defect_qty"),
             "totalDefectInOut" => $defectInOutTotal
         ]);
     }
