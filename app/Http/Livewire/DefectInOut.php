@@ -68,8 +68,9 @@ class DefectInOut extends Component
     public $defectOutSelectedType;
     public $defectOutSelectedArea;
 
+    public $defectInOutFrom;
+    public $defectInOutTo;
     public $defectInOutSearch;
-
     public $defectInOutOutputType;
 
     public $scannedDefectIn;
@@ -136,6 +137,8 @@ class DefectInOut extends Component
         $this->scannedDefectOut = null;
 
         $this->defectInOutShowPage = 10;
+        $this->defectInOutFrom = date("Y-m-d", strtotime("-7 days"));
+        $this->defectInOutTo = date("Y-m-d");
 
         $this->productTypeImage = null;
         $this->defectPositionX = null;
@@ -543,7 +546,7 @@ class DefectInOut extends Component
         // All Defect
         $defectInOutQuery = DefectInOutModel::
             where("type", Auth::user()->Groupp)->
-            whereBetween("updated_at", [date("Y-m-d", strtotime($this->date." -7 days"))." 00:00:00", $this->date." 23:59:59"]);
+            whereBetween("updated_at", [$this->defectInOutFrom." 00:00:00", $this->defectInOutTo." 23:59:59"]);
 
         $defectInOutTotal = $defectInOutQuery->get()->count();
 

@@ -205,6 +205,9 @@ class DefectInOutController extends Controller
     }
 
     public function getDefectInOutDaily(Request $request) {
+        $dateFrom = $request->dateFrom ? $request->dateFrom : date("Y-m-d");
+        $dateTo = $request->dateTo ? $request->dateTo : date("Y-m-d");
+
         $defectInOutDaily = DefectInOut::selectRaw("
                 DATE(output_defect_in_out.updated_at) tanggal,
                 COUNT(output_defect_in_out.id) total_in,
@@ -212,7 +215,7 @@ class DefectInOutController extends Controller
                 SUM(CASE WHEN output_defect_in_out.status = 'reworked' THEN 1 ELSE 0 END) total_out
             ")->
             where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
-            whereBetween("output_defect_in_out.updated_at", [date("Y-m-d", strtotime("-7 days")), date("Y-m-d")])->
+            whereBetween("output_defect_in_out.updated_at", [$dateFrom." 00:00:00", $dateTo." 23:59:59"])->
             groupByRaw("DATE(output_defect_in_out.updated_at)")->
             get();
 
