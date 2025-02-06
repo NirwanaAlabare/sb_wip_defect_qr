@@ -209,14 +209,14 @@ class DefectInOutController extends Controller
         $dateTo = $request->dateTo ? $request->dateTo : date("Y-m-d");
 
         $defectInOutDaily = DefectInOut::selectRaw("
-                DATE(output_defect_in_out.updated_at) tanggal,
+                DATE(output_defect_in_out.created_at) tanggal,
                 COUNT(output_defect_in_out.id) total_in,
                 SUM(CASE WHEN output_defect_in_out.status = 'defect' THEN 1 ELSE 0 END) total_process,
                 SUM(CASE WHEN output_defect_in_out.status = 'reworked' THEN 1 ELSE 0 END) total_out
             ")->
             where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
-            whereBetween("output_defect_in_out.updated_at", [$dateFrom." 00:00:00", $dateTo." 23:59:59"])->
-            groupByRaw("DATE(output_defect_in_out.updated_at)")->
+            whereBetween("output_defect_in_out.created_at", [$dateFrom." 00:00:00", $dateTo." 23:59:59"])->
+            groupByRaw("DATE(output_defect_in_out.created_at)")->
             get();
 
         return DataTables::of($defectInOutDaily)->toJson();
@@ -255,7 +255,7 @@ class DefectInOutController extends Controller
             leftJoin("act_costing as act_costing_packing", "act_costing_packing.id", "=", "so_packing.id_cost")->
             leftJoin("master_plan as master_plan_packing", "master_plan_packing.id", "=", "output_defects_packing.master_plan_id")->
             where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
-            whereBetween("output_defect_in_out.updated_at", [$request->tanggal." 00:00:00", $request->tanggal." 23:59:59"])->
+            whereBetween("output_defect_in_out.created_at", [$request->tanggal." 00:00:00", $request->tanggal." 23:59:59"])->
             whereRaw("
                 (
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE master_plan.sewing_line END) LIKE '%".$request->line."%'

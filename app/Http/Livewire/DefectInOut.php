@@ -543,15 +543,18 @@ class DefectInOut extends Component
             get();
 
         // All Defect
-        $defectInOutQuery = DefectInOutModel::
-            where("type", Auth::user()->Groupp)->
-            whereBetween("updated_at", [$this->defectInOutFrom." 00:00:00", $this->defectInOutTo." 23:59:59"]);
-
-        $defectInOutTotal = $defectInOutQuery->get()->count();
-
-        $this->defectInOutList = $defectInOutQuery->
-            orderBy("output_defect_in_out.updated_at", "desc")->
+        $defectInOutDaily = DefectInOutModel::selectRaw("
+                DATE(output_defect_in_out.created_at) tanggal,
+                COUNT(output_defect_in_out.id) total_in,
+                SUM(CASE WHEN output_defect_in_out.status = 'defect' THEN 1 ELSE 0 END) total_process,
+                SUM(CASE WHEN output_defect_in_out.status = 'reworked' THEN 1 ELSE 0 END) total_out
+            ")->
+            where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
+            whereBetween("output_defect_in_out.created_at", [$this->defectInOutFrom." 00:00:00", $this->defectInOutTo." 23:59:59"])->
+            groupByRaw("DATE(output_defect_in_out.created_at)")->
             get();
+
+        $defectInOutTotal = $defectInOutDaily->sum("total_in");
 
         return view('livewire.defect-in-out', [
             "totalDefectIn" => $this->defectInList->sum("defect_qty"),
