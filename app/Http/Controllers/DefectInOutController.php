@@ -210,10 +210,12 @@ class DefectInOutController extends Controller
 
         $defectInOutDaily = DefectInOut::selectRaw("
                 DATE(output_defect_in_out.created_at) tanggal,
-                COUNT(output_defect_in_out.id) total_in,
-                SUM(CASE WHEN output_defect_in_out.status = 'defect' THEN 1 ELSE 0 END) total_process,
-                SUM(CASE WHEN output_defect_in_out.status = 'reworked' THEN 1 ELSE 0 END) total_out
+                SUM(CASE WHEN (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE output_defects.id END) IS NOT NULL THEN 1 ELSE 0 END) total_in,
+                SUM(CASE WHEN (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE output_defects.id END) IS NOT NULL AND output_defect_in_out.status = 'defect' THEN 1 ELSE 0 END) total_process,
+                SUM(CASE WHEN (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE output_defects.id END) IS NOT NULL AND output_defect_in_out.status = 'reworked' THEN 1 ELSE 0 END) total_out
             ")->
+            leftJoin("output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
+            leftJoin("output_defects_packing", "output_defects_packing.id", "=", "output_defect_in_out.defect_id")->
             where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
             whereBetween("output_defect_in_out.created_at", [$dateFrom." 00:00:00", $dateTo." 23:59:59"])->
             groupByRaw("DATE(output_defect_in_out.created_at)")->
@@ -258,7 +260,8 @@ class DefectInOutController extends Controller
             whereBetween("output_defect_in_out.created_at", [$request->tanggal." 00:00:00", $request->tanggal." 23:59:59"])->
             whereRaw("
                 (
-                    output_defect_in_out.id IS NOT NULL
+                    output_defect_in_out.id IS NOT NULL AND
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qc' THEN output_defects.id ELSE null END) END) IS NOT NULL
                     ".($request->line ? "AND (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qc' THEN master_plan.sewing_line ELSE null END) END) LIKE '%".$request->line."%'" : "")."
                     ".($request->departemen ? "AND output_defect_in_out.output_type LIKE '%".$request->departemen."%'" : "")."
                 )
