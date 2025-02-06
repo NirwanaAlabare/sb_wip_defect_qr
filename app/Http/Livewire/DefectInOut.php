@@ -30,6 +30,7 @@ class DefectInOut extends Component
     public $defectInQty;
     public $defectInOutputType;
 
+    public $defectInList;
     public $defectInDateModal;
     public $defectInOutputModal;
     public $defectInLineModal;
@@ -45,6 +46,7 @@ class DefectInOut extends Component
     public $defectOutQty;
     public $defectOutOutputType;
 
+    public $defectOutList;
     public $defectOutDateModal;
     public $defectOutOutputModal;
     public $defectOutLineModal;
@@ -393,9 +395,9 @@ class DefectInOut extends Component
                     output_defects_packing.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            // if ($this->defectInDate) {
-            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            // }
+            if ($this->defectInDate) {
+                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -452,9 +454,9 @@ class DefectInOut extends Component
                     output_defects.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            // if ($this->defectInDate) {
-            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            // }
+            if ($this->defectInDate) {
+                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -471,7 +473,7 @@ class DefectInOut extends Component
                 groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defects.kode_numbering");
         }
 
-        $defectInList = $defectIn->orderBy("sewing_line")->
+        $this->defectInList = $defectIn->orderBy("sewing_line")->
             orderBy("id_ws")->
             orderBy("color")->
             orderBy("defect_type")->
@@ -533,7 +535,7 @@ class DefectInOut extends Component
             $defectOutQuery->where("output_defects.defect_type_id", $this->defectOutSelectedType);
         }
 
-        $defectOutList = $defectOutQuery->
+        $this->defectOutList = $defectOutQuery->
             groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defect_in_out.output_type", "output_defect_in_out.kode_numbering")->
             orderBy("master_plan.sewing_line")->
             orderBy("master_plan.id_ws")->
@@ -543,22 +545,22 @@ class DefectInOut extends Component
             get();
 
         // All Defect
-        $defectInOutQuery = DefectInOutModel::
-            where("type", Auth::user()->Groupp)->
-            whereBetween("updated_at", [$this->defectInOutFrom." 00:00:00", $this->defectInOutTo." 23:59:59"]);
+        $defectInOutDaily = DefectInOutModel::selectRaw("
+                DATE(output_defect_in_out.created_at) tanggal,
+                COUNT(output_defect_in_out.id) total_in,
+                SUM(CASE WHEN output_defect_in_out.status = 'defect' THEN 1 ELSE 0 END) total_process,
+                SUM(CASE WHEN output_defect_in_out.status = 'reworked' THEN 1 ELSE 0 END) total_out
+            ")->
+            where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
+            whereBetween("output_defect_in_out.created_at", [$this->defectInOutFrom." 00:00:00", $this->defectInOutTo." 23:59:59"])->
+            groupByRaw("DATE(output_defect_in_out.created_at)")->
+            get();
 
-        $defectInOutTotal = $defectInOutQuery->get()->count();
-
-        $defectInOutList = $defectInOutQuery->
-            orderBy("output_defect_in_out.updated_at", "desc")->
-            paginate($this->defectInOutShowPage, ['*'], 'defectInOutPage');
+        $defectInOutTotal = $defectInOutDaily->sum("total_in");
 
         return view('livewire.defect-in-out', [
-            "defectInList" => $defectInList,
-            "defectOutList" => $defectOutList,
-            "defectInOutList" => $defectInOutList,
-            "totalDefectIn" => $defectInList->sum("defect_qty"),
-            "totalDefectOut" => $defectOutList->sum("defect_qty"),
+            "totalDefectIn" => $this->defectInList->sum("defect_qty"),
+            "totalDefectOut" => $this->defectOutList->sum("defect_qty"),
             "totalDefectInOut" => $defectInOutTotal
         ]);
     }
