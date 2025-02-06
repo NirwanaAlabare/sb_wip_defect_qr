@@ -258,9 +258,9 @@ class DefectInOutController extends Controller
             whereBetween("output_defect_in_out.created_at", [$request->tanggal." 00:00:00", $request->tanggal." 23:59:59"])->
             whereRaw("
                 (
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE master_plan.sewing_line END) LIKE '%".$request->line."%'
-                    OR
-                    output_defect_in_out.output_type LIKE '%".$request->departemen."%'
+                    output_defect_in_out.id IS NOT NULL
+                    ".($request->line ? "AND (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qc' THEN master_plan.sewing_line ELSE null END) END) LIKE '%".$request->line."%'" : "")."
+                    ".($request->departemen ? "AND output_defect_in_out.output_type LIKE '%".$request->departemen."%'" : "")."
                 )
             ")->
             groupBy("output_defect_in_out.id")->
