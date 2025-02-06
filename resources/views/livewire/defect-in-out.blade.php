@@ -1091,6 +1091,8 @@
         function defectInOutDetailReload() {
             $("#defect-in-out-detail-table").DataTable().ajax.reload(() => {
                 $("#defectInOutDetailQty").val(defectInOutDetailDatatable.page.info().recordsTotal);
+
+                defectInOutReload();
             });
         }
 
