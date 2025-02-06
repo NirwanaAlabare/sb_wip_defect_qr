@@ -378,6 +378,7 @@ class DefectInOut extends Component
                 $join->on("output_defect_in_out.defect_id", "=", "output_defects_packing.id");
                 $join->on("output_defect_in_out.output_type", "=", DB::raw("'packing'"));
             })->
+            whereNotNull("output_defects_packing.id")->
             whereNotNull("master_plan.id")->
             where("output_defects_packing.defect_status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
@@ -395,9 +396,9 @@ class DefectInOut extends Component
                     output_defects_packing.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            if ($this->defectInDate) {
-                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            }
+            // if ($this->defectInDate) {
+            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            // }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -437,6 +438,7 @@ class DefectInOut extends Component
                 $join->on("output_defect_in_out.defect_id", "=", "output_defects.id");
                 $join->on("output_defect_in_out.output_type", "=", DB::raw("'qc'"));
             })->
+            whereNotNull("output_defects.id")->
             whereNotNull("master_plan.id")->
             where("output_defects.defect_status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
@@ -454,9 +456,9 @@ class DefectInOut extends Component
                     output_defects.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            if ($this->defectInDate) {
-                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            }
+            // if ($this->defectInDate) {
+            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            // }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -502,6 +504,7 @@ class DefectInOut extends Component
         leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
         leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
         leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
+        whereNotNull("output_defects.id")->
         where("output_defect_types.allocation", Auth::user()->Groupp)->
         where("output_defect_in_out.status", "defect")->
         where("output_defect_in_out.output_type", $this->defectOutOutputType)->
@@ -547,10 +550,12 @@ class DefectInOut extends Component
         // All Defect
         $defectInOutDaily = DefectInOutModel::selectRaw("
                 DATE(output_defect_in_out.created_at) tanggal,
-                COUNT(output_defect_in_out.id) total_in,
-                SUM(CASE WHEN output_defect_in_out.status = 'defect' THEN 1 ELSE 0 END) total_process,
-                SUM(CASE WHEN output_defect_in_out.status = 'reworked' THEN 1 ELSE 0 END) total_out
+                SUM(CASE WHEN (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE output_defects.id END) IS NOT NULL THEN 1 ELSE 0 END) total_in,
+                SUM(CASE WHEN (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE output_defects.id END) IS NOT NULL AND output_defect_in_out.status = 'defect' THEN 1 ELSE 0 END) total_process,
+                SUM(CASE WHEN (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE output_defects.id END) IS NOT NULL AND output_defect_in_out.status = 'reworked' THEN 1 ELSE 0 END) total_out
             ")->
+            leftJoin("output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
+            leftJoin("output_defects_packing", "output_defects_packing.id", "=", "output_defect_in_out.defect_id")->
             where("output_defect_in_out.type", strtolower(Auth::user()->Groupp))->
             whereBetween("output_defect_in_out.created_at", [$this->defectInOutFrom." 00:00:00", $this->defectInOutTo." 23:59:59"])->
             groupByRaw("DATE(output_defect_in_out.created_at)")->
