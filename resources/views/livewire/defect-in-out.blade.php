@@ -37,16 +37,16 @@
                         </div>
                         <div class="col-md-8">
                             <div class="row g-3 mb-3">
-                                <div class="col-md-5">
+                                <div class="col-md-4">
                                     <input type="text" class="form-control form-control-sm" wire:model="defectInSearch" placeholder="Search...">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <select class="form-select form-select-sm" name="defectInOutputType" id="defect-in-output-type" wire:model="defectInOutputType">
                                         <option value="qc">QC</option>
                                         <option value="packing">PACKING</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <select class="form-select form-select-sm" name="defectInLine" id="defect-in-line" wire:model="defectInLine">
                                         <option value="" selected>Pilih Line</option>
                                         @foreach ($lines as $line)
@@ -54,14 +54,14 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-2">
+                                {{-- <div class="col-md-2">
                                     <select class="form-select form-select-sm" name="defectInShowPage" id="defect-in-show-page" wire:model="defectInShowPage">
                                         <option value="10">Show 10</option>
                                         <option value="25">Show 25</option>
                                         <option value="50">Show 50</option>
                                         <option value="100">Show 100</option>
                                     </select>
-                                </div>
+                                </div> --}}
                                 <div class="col-md-3 d-none">
                                     <button type="button" class="btn btn-sm btn-rework w-100 fw-bold" wire:click="saveAllDefectIn">ALL DEFECT OUT</button>
                                 </div>
@@ -152,16 +152,16 @@
                         </div>
                         <div class="col-md-8">
                             <div class="row mb-3">
-                                <div class="col-md-5">
+                                <div class="col-md-4">
                                     <input type="text" class="form-control form-control-sm" wire:model="defectOutSearch" placeholder="Search...">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <select class="form-select form-select-sm" name="defectOutOutputType" id="defect-out-output-type" wire:model="defectOutOutputType">
                                         <option value="qc">QC</option>
                                         <option value="packing">PACKING</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-4">
                                     <select class="form-select form-select-sm" name="defectOutLine" id="defect-out-line" wire:model="defectOutLine">
                                         <option value="" selected>Pilih Line</option>
                                         @foreach ($lines as $line)
@@ -169,14 +169,14 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-2">
+                                {{-- <div class="col-md-2">
                                     <select class="form-select form-select-sm" name="defectOutShowPage" id="defect-out-show-page" wire:model="defectOutShowPage">
                                         <option value="10">Show 10</option>
                                         <option value="25">Show 25</option>
                                         <option value="50">Show 50</option>
                                         <option value="100">Show 100</option>
                                     </select>
-                                </div>
+                                </div> --}}
                                 <div class="col-md-3 d-none">
                                     <button type="button" class="btn btn-sm btn-rework w-100 fw-bold" wire:click="saveAllDefectOut">ALL DEFECT OUT</button>
                                 </div>
