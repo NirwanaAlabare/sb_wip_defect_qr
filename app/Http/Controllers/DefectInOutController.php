@@ -259,7 +259,7 @@ class DefectInOutController extends Controller
             whereRaw("
                 (
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE master_plan.sewing_line END) LIKE '%".$request->line."%'
-                    AND
+                    OR
                     output_defect_in_out.output_type LIKE '%".$request->departemen."%'
                 )
             ")->
