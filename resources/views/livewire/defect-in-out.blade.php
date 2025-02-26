@@ -43,6 +43,7 @@
                                 <div class="col-md-3">
                                     <select class="form-select form-select-sm" name="defectInOutputType" id="defect-in-output-type" wire:model="defectInOutputType">
                                         <option value="qc">QC</option>
+                                        <option value="qcf">QC FINISHING</option>
                                         <option value="packing">PACKING</option>
                                     </select>
                                 </div>
@@ -109,7 +110,7 @@
                                                     <td>{{ $defectIn->size }}</td>
                                                     <td>{{ $defectIn->defect_type }}</td>
                                                     <td>{{ $defectIn->defect_qty }}</td>
-                                                    <td class="fw-bold {{ $defectIn->output_type == "qc" ? "text-danger" : "text-success" }}">{{ strtoupper($defectIn->output_type) }}</td>
+                                                    <td class="fw-bold {{ $defectIn->output_type == 'qc' ? 'text-danger' : ($defectIn->output_type == 'qcf' ? 'text-pink' : 'text-success') }}">{{ strtoupper($defectIn->output_type) }}</td>
                                                     {{-- <td>{{ $defectIn->updated_at }}</td> --}}
                                                     {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}" style="scale: 1.3" {{ $thisDefectInChecked && $thisDefectInChecked->count() > 0 ? "checked" : ""  }} onchange="defectInCheck(this)"></td>
                                                     <td><button class="btn btn-sm btn-defect fw-bold" wire:click='preSaveSelectedDefectIn("{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}")'>IN</button></td> --}}
@@ -158,6 +159,7 @@
                                 <div class="col-md-3">
                                     <select class="form-select form-select-sm" name="defectOutOutputType" id="defect-out-output-type" wire:model="defectOutOutputType">
                                         <option value="qc">QC</option>
+                                        <option value="qcf">QC FINISHING</option>
                                         <option value="packing">PACKING</option>
                                     </select>
                                 </div>
@@ -224,7 +226,7 @@
                                                     <td>{{ $defectOut->size }}</td>
                                                     <td>{{ $defectOut->defect_type }}</td>
                                                     <td>{{ $defectOut->defect_qty }}</td>
-                                                    <td class="fw-bold {{ $defectOut->output_type == "qc" ? "text-danger" : "text-success" }}">{{ strtoupper($defectOut->output_type) }}</td>
+                                                    <td class="fw-bold {{ $defectOut->output_type == 'qc' ? 'text-danger' : ($defectOut->output_type == 'qcf' ? 'text-pink' : 'text-success') }}">{{ strtoupper($defectOut->output_type) }}</td>
                                                     {{-- <td>{{ $defectOut->updated_at }}</td> --}}
                                                     {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}" style="scale: 1.3" {{ $thisDefectOutChecked && $thisDefectOutChecked->count() > 0 ? "checked" : ""  }} onchange="defectOutCheck(this)"></td>
                                                     <td><button class="btn btn-sm btn-rework fw-bold" wire:click="preSaveSelectedDefectOut('{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}')">OUT</button></td> --}}
@@ -455,6 +457,7 @@
                                 <select class="form-select select2-defect-in-out-modal" id="defectInOutDetailDepartment" onchange="defectInOutDetailReload()">
                                     <option value="">All Department</option>
                                     <option value="qc">QC</option>
+                                    <option value="qcf">QC FINISHING</option>
                                     <option value="packing">Packing</option>
                                 </select>
                             </div>
