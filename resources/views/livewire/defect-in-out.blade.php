@@ -43,6 +43,7 @@
                                 <div class="col-md-4">
                                     <select class="form-select form-select-sm" name="defectInOutputType" id="defect-in-output-type" wire:model="defectInOutputType">
                                         <option value="qc">QC</option>
+                                        <option value="qcf">QC Finishing</option>
                                         <option value="packing">PACKING</option>
                                     </select>
                                 </div>
@@ -150,6 +151,7 @@
                                 <div class="col-md-4">
                                     <select class="form-select form-select-sm" name="defectOutOutputType" id="defect-out-output-type" wire:model="defectOutOutputType">
                                         <option value="qc">QC</option>
+                                        <option value="qcf">QC Finishing</option>
                                         <option value="packing">PACKING</option>
                                     </select>
                                 </div>
@@ -439,14 +441,25 @@
                                 <select class="form-select select2-defect-in-out-modal" id="defectInOutDetailDepartment" onchange="defectInOutDetailReload()">
                                     <option value="">All Department</option>
                                     <option value="qc">QC</option>
+                                    <option value="qcf">QC Finishing</option>
                                     <option value="packing">Packing</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Total</label>
-                                <input type="text" class="form-control" id="defectInOutDetailQty" readonly>
+                            <div class="row g-1 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">IN</label>
+                                    <input type="text" class="form-control" id="defectInOutDetailIn" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">PROCESS</label>
+                                    <input type="text" class="form-control" id="defectInOutDetailProcess" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">OUT</label>
+                                    <input type="text" class="form-control" id="defectInOutDetailOut" readonly>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-12">
@@ -1104,7 +1117,31 @@
 
         function defectInOutDetailReload() {
             $("#defect-in-out-detail-table").DataTable().ajax.reload(() => {
-                $("#defectInOutDetailQty").val(defectInOutDetailDatatable.page.info().recordsTotal);
+                $("#defectInOutDetailIn").val("-");
+                $("#defectInOutDetailProcess").val("-");
+                $("#defectInOutDetailOut").val("-");
+
+                $.ajax({
+                    url: "{{ route("get-defect-in-out-detail-total") }}",
+                    type: "get",
+                    data: {
+                        tanggal : $("#defectInOutDetailDate").val(),
+                        line : $("#defectInOutDetailLine").val(),
+                        departemen : $("#defectInOutDetailDepartment").val()
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log(response);
+                        if (response) {
+                            $("#defectInOutDetailIn").val(response.defectIn);
+                            $("#defectInOutDetailProcess").val(response.defectProcess);
+                            $("#defectInOutDetailOut").val(response.defectOut);
+                        }
+                    },
+                    error: function (jqXHR) {
+                        console.error(jqXHR);
+                    }
+                });
 
                 defectInOutReload();
             });
