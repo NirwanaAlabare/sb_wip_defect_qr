@@ -204,6 +204,7 @@ class DefectInOut extends Component
                 leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
                 leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects_packing.defect_type_id")->
                 leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_defects_packing.id")->
+                whereNotNull("output_defects_packing.id")->
                 where("output_defects_packing.defect_status", "defect")->
                 where("output_defect_types.allocation", Auth::user()->Groupp)->
                 where("output_defects_packing.kode_numbering", $this->scannedDefectIn)->
@@ -254,6 +255,7 @@ class DefectInOut extends Component
                 leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
                 leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
                 leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_defects.id")->
+                whereNotNull("output_defects.id")->
                 where("output_defects.defect_status", "defect")->
                 where("output_defect_types.allocation", Auth::user()->Groupp)->
                 where("output_defects.kode_numbering", $this->scannedDefectIn)->
@@ -419,9 +421,9 @@ class DefectInOut extends Component
                     output_defects_packing.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            if ($this->defectInDate) {
-                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            }
+            // if ($this->defectInDate) {
+            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            // }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -537,9 +539,9 @@ class DefectInOut extends Component
                     output_defects.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            if ($this->defectInDate) {
-                $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            }
+            // if ($this->defectInDate) {
+            //     $defectInQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            // }
             if ($this->defectInLine) {
                 $defectInQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -585,11 +587,12 @@ class DefectInOut extends Component
         leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
         leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
         leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
+        whereNotNull("output_defects.id")->
         where("output_defect_types.allocation", Auth::user()->Groupp)->
         where("output_defect_in_out.status", "defect")->
         where("output_defect_in_out.output_type", $this->defectOutOutputType)->
         where("output_defect_in_out.type", Auth::user()->Groupp)->
-        whereRaw("YEAR(output_defect_in_out.updated_at) = '".date("Y")."'");
+        whereRaw("YEAR(output_defect_in_out.created_at) = '".date("Y")."'");
         if ($this->defectOutSearch) {
             $defectOutQuery->whereRaw("(
                 master_plan.tgl_plan LIKE '%".$this->defectOutSearch."%' OR
@@ -602,9 +605,9 @@ class DefectInOut extends Component
                 output_defect_in_out.kode_numbering LIKE '%".$this->defectOutSearch."%'
             )");
         }
-        if ($this->defectOutDate) {
-            $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$this->defectOutDate." 00:00:00", $this->defectOutDate." 23:59:59"]);
-        }
+        // if ($this->defectOutDate) {
+        //     $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$this->defectOutDate." 00:00:00", $this->defectOutDate." 23:59:59"]);
+        // }
         if ($this->defectOutLine) {
             $defectOutQuery->where("master_plan.sewing_line", $this->defectOutLine);
         }
