@@ -457,10 +457,10 @@
                             <div class="mb-3">
                                 <label class="form-label">Department</label>
                                 <select class="form-select select2-defect-in-out-modal" id="defectInOutDetailDepartment" onchange="defectInOutDetailReload()">
-                                    <option value="all">ALL</option>
+                                    <option value="">All Department</option>
                                     <option value="qc">QC</option>
                                     <option value="qcf">QC FINISHING</option>
-                                    <option value="packing">Packing</option>
+                                    <option value="packing">PACKING</option>
                                 </select>
                             </div>
                         </div>
