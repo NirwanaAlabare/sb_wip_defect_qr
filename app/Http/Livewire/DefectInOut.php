@@ -354,7 +354,7 @@ class DefectInOut extends Component
             }
 
             if ($scannedDefect) {
-                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->first();
+                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->where("output_type", $scannedDefect->output_type)->first();
 
                 if (!$defectInOut) {
                     $createDefectInOut = DefectInOutModel::create([
@@ -400,7 +400,8 @@ class DefectInOut extends Component
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno ELSE act_costing.styleno END) END) style,
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.color ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.color ELSE so_det.color END) END) color,
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size ELSE so_det.size END) END) size,
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN userpassword_packing.username ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN userpassword_finish.username ELSE userpassword.username END) END) username
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN userpassword_packing.username ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN userpassword_finish.username ELSE userpassword.username END) END) username,
+                    output_defect_in_out.output_type
                 ")->
                 // Defect
                 leftJoin("output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
@@ -445,7 +446,8 @@ class DefectInOut extends Component
                     act_costing.styleno style,
                     so_det.color,
                     so_det.size,
-                    userpassword.username
+                    userpassword.username,
+                    output_defect_in_out.output_type
                 ")->
                 leftJoin('output_defects', "output_defects.id", "=", "output_defect_in_out.defect_id")->
                 leftJoin("user_sb_wip", "user_sb_wip.id", "=", "output_defects.created_by")->
@@ -462,7 +464,7 @@ class DefectInOut extends Component
             }
 
             if ($scannedDefect) {
-                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->first();
+                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->where("output_type", $scannedDefect->output_type)->first();
 
                 if ($defectInOut) {
                     if ($defectInOut->status == "defect") {
@@ -620,9 +622,9 @@ class DefectInOut extends Component
                     output_check_finishing.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            if ($this->defectInDate) {
-                $defectInQcfQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            }
+            // if ($this->defectInDate) {
+            //     $defectInQcfQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            // }
             if ($this->defectInLine) {
                 $defectInQcfQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -879,6 +881,7 @@ class DefectInOut extends Component
         }
 
         $this->defectInList = $defectIn->
+            orderBy("defect_time", "desc")->
             orderBy("sewing_line")->
             orderBy("id_ws")->
             orderBy("color")->
@@ -933,12 +936,11 @@ class DefectInOut extends Component
             leftJoin("master_plan as master_plan_finish", "master_plan_finish.id", "=", "output_check_finishing.master_plan_id")->
             leftJoin("userpassword as userpassword_finish", "userpassword.username", "=", "output_check_finishing.created_by")->
             // Conditional
-            whereNotNull("output_defects.id")->
+            whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.id ELSE output_defects.id END) END) IS NOT NULL ")->
             whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.allocation ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.allocation ELSE output_defect_types.allocation END) END) = '".Auth::user()->Groupp."' ")->
             where("output_defect_in_out.status", "defect")->
             where("output_defect_in_out.type", Auth::user()->Groupp)->
-            whereRaw("YEAR(output_defect_in_out.created_at) = '".date("Y")."'")->
-            where("output_defect_in_out.output_type", "qcf");
+            whereRaw("YEAR(output_defect_in_out.created_at) = '".date("Y")."'");
             if ($this->defectOutSearch) {
                 $defectOutQuery->whereRaw("(
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.tgl_plan ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.tgl_plan ELSE master_plan.tgl_plan END) END) LIKE '%".$this->defectOutSearch."%' OR
