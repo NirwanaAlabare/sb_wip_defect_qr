@@ -229,7 +229,7 @@ class DefectInOutController extends Controller
         $defectInOutQuery = DefectInOut::selectRaw("
                 output_defect_in_out.created_at time_in,
                 output_defect_in_out.reworked_at time_out,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE master_plan.sewing_line END) sewing_line,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line ELSE master_plan.sewing_line END) END) sewing_line,
                 output_defect_in_out.output_type,
                 output_defect_in_out.kode_numbering,
                 (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno ELSE act_costing.kpno END) END) no_ws,
@@ -275,7 +275,7 @@ class DefectInOutController extends Controller
                     output_defect_in_out.id IS NOT NULL AND
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qc' THEN output_defects.id ELSE null END) END) END) IS NOT NULL
                     ".($request->line ? "AND (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qc' THEN master_plan.sewing_line ELSE null END) END) END) LIKE '%".$request->line."%'" : "")."
-                    ".($request->departemen ? "AND output_defect_in_out.output_type LIKE '%".$request->departemen."%'" : "")."
+                    ".($request->departemen != "all" ? "AND output_defect_in_out.output_type = '".$request->departemen."'" : "")."
                 )
             ")->
             groupBy("output_defect_in_out.id")->
@@ -288,7 +288,7 @@ class DefectInOutController extends Controller
         $defectInOutQuery = DefectInOut::selectRaw("
                 output_defect_in_out.created_at time_in,
                 output_defect_in_out.reworked_at time_out,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE master_plan.sewing_line END) sewing_line,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line ELSE master_plan.sewing_line END) END) sewing_line,
                 output_defect_in_out.output_type,
                 output_defect_in_out.kode_numbering,
                 (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno ELSE act_costing.kpno END) END) no_ws,
@@ -334,7 +334,7 @@ class DefectInOutController extends Controller
                     output_defect_in_out.id IS NOT NULL AND
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qc' THEN output_defects.id ELSE null END) END) END) IS NOT NULL
                     ".($request->line ? "AND (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qc' THEN master_plan.sewing_line ELSE null END) END) END) LIKE '%".$request->line."%'" : "")."
-                    ".($request->departemen ? "AND output_defect_in_out.output_type LIKE '%".$request->departemen."%'" : "")."
+                    ".($request->departemen != "all" ? "AND output_defect_in_out.output_type = '".$request->departemen."'" : "")."
                 )
             ")->
             groupBy("output_defect_in_out.id")->

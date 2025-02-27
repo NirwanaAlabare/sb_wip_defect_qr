@@ -620,9 +620,9 @@ class DefectInOut extends Component
                     output_check_finishing.kode_numbering LIKE '%".$this->defectInSearch."%'
                 )");
             }
-            if ($this->defectInDate) {
-                $defectInQcfQuery->where("master_plan.tgl_plan", $this->defectInDate);
-            }
+            // if ($this->defectInDate) {
+            //     $defectInQcfQuery->where("master_plan.tgl_plan", $this->defectInDate);
+            // }
             if ($this->defectInLine) {
                 $defectInQcfQuery->where("master_plan.sewing_line", $this->defectInLine);
             }
@@ -879,6 +879,7 @@ class DefectInOut extends Component
         }
 
         $this->defectInList = $defectIn->
+            orderBy("defect_time", "desc")->
             orderBy("sewing_line")->
             orderBy("id_ws")->
             orderBy("color")->
@@ -933,12 +934,11 @@ class DefectInOut extends Component
             leftJoin("master_plan as master_plan_finish", "master_plan_finish.id", "=", "output_check_finishing.master_plan_id")->
             leftJoin("userpassword as userpassword_finish", "userpassword.username", "=", "output_check_finishing.created_by")->
             // Conditional
-            whereNotNull("output_defects.id")->
+            whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.id ELSE output_defects.id END) END) IS NOT NULL ")->
             whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.allocation ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.allocation ELSE output_defect_types.allocation END) END) = '".Auth::user()->Groupp."' ")->
             where("output_defect_in_out.status", "defect")->
             where("output_defect_in_out.type", Auth::user()->Groupp)->
-            whereRaw("YEAR(output_defect_in_out.created_at) = '".date("Y")."'")->
-            where("output_defect_in_out.output_type", "qcf");
+            whereRaw("YEAR(output_defect_in_out.created_at) = '".date("Y")."'");
             if ($this->defectOutSearch) {
                 $defectOutQuery->whereRaw("(
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.tgl_plan ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.tgl_plan ELSE master_plan.tgl_plan END) END) LIKE '%".$this->defectOutSearch."%' OR
@@ -994,33 +994,33 @@ class DefectInOut extends Component
             where("output_defect_in_out.output_type", $this->defectOutOutputType)->
             where("output_defect_in_out.type", Auth::user()->Groupp)->
             whereRaw("YEAR(output_defect_in_out.created_at) = '".date("Y")."'");
-            if ($this->defectOutSearch) {
-                $defectOutQuery->whereRaw("(
-                    master_plan.tgl_plan LIKE '%".$this->defectOutSearch."%' OR
-                    master_plan.sewing_line LIKE '%".$this->defectOutSearch."%' OR
-                    act_costing.kpno LIKE '%".$this->defectOutSearch."%' OR
-                    act_costing.styleno LIKE '%".$this->defectOutSearch."%' OR
-                    master_plan.color LIKE '%".$this->defectOutSearch."%' OR
-                    output_defect_types.defect_type LIKE '%".$this->defectOutSearch."%' OR
-                    so_det.size LIKE '%".$this->defectOutSearch."%' OR
-                    output_defect_in_out.kode_numbering LIKE '%".$this->defectOutSearch."%'
-                )");
-            }
-            // if ($this->defectOutDate) {
-            //     $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$this->defectOutDate." 00:00:00", $this->defectOutDate." 23:59:59"]);
+            // if ($this->defectOutSearch) {
+            //     $defectOutQuery->whereRaw("(
+            //         master_plan.tgl_plan LIKE '%".$this->defectOutSearch."%' OR
+            //         master_plan.sewing_line LIKE '%".$this->defectOutSearch."%' OR
+            //         act_costing.kpno LIKE '%".$this->defectOutSearch."%' OR
+            //         act_costing.styleno LIKE '%".$this->defectOutSearch."%' OR
+            //         master_plan.color LIKE '%".$this->defectOutSearch."%' OR
+            //         output_defect_types.defect_type LIKE '%".$this->defectOutSearch."%' OR
+            //         so_det.size LIKE '%".$this->defectOutSearch."%' OR
+            //         output_defect_in_out.kode_numbering LIKE '%".$this->defectOutSearch."%'
+            //     )");
             // }
-            if ($this->defectOutLine) {
-                $defectOutQuery->where("master_plan.sewing_line", $this->defectOutLine);
-            }
-            if ($this->defectOutSelectedMasterPlan) {
-                $defectOutQuery->where("master_plan.id", $this->defectOutSelectedMasterPlan);
-            }
-            if ($this->defectOutSelectedSize) {
-                $defectOutQuery->where("output_defects.so_det_id", $this->defectOutSelectedSize);
-            }
-            if ($this->defectOutSelectedType) {
-                $defectOutQuery->where("output_defects.defect_type_id", $this->defectOutSelectedType);
-            };
+            // // if ($this->defectOutDate) {
+            // //     $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$this->defectOutDate." 00:00:00", $this->defectOutDate." 23:59:59"]);
+            // // }
+            // if ($this->defectOutLine) {
+            //     $defectOutQuery->where("master_plan.sewing_line", $this->defectOutLine);
+            // }
+            // if ($this->defectOutSelectedMasterPlan) {
+            //     $defectOutQuery->where("master_plan.id", $this->defectOutSelectedMasterPlan);
+            // }
+            // if ($this->defectOutSelectedSize) {
+            //     $defectOutQuery->where("output_defects.so_det_id", $this->defectOutSelectedSize);
+            // }
+            // if ($this->defectOutSelectedType) {
+            //     $defectOutQuery->where("output_defects.defect_type_id", $this->defectOutSelectedType);
+            // };
         }
 
         $this->defectOutList = $defectOutQuery->
