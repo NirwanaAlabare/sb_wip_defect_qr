@@ -354,7 +354,7 @@ class DefectInOut extends Component
             }
 
             if ($scannedDefect) {
-                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->first();
+                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->where("output_type", $this->defectInOutputType)->first();
 
                 if (!$defectInOut) {
                     $createDefectInOut = DefectInOutModel::create([
@@ -462,7 +462,7 @@ class DefectInOut extends Component
             }
 
             if ($scannedDefect) {
-                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->first();
+                $defectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->where("output_type", $this->defectOutOutputType)->first();
 
                 if ($defectInOut) {
                     if ($defectInOut->status == "defect") {
