@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <link rel="icon" type="image/x-icon" href=" {{ asset('images/defect.ico') }}">
-    <title>NDS DEFECT</title>
+    <title>SCAN NDS DEFECT</title>
 
     @include('layouts.link')
 
