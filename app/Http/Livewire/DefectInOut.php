@@ -449,7 +449,7 @@ class DefectInOut extends Component
                     userpassword.username,
                     output_defect_in_out.output_type
                 ")->
-                leftJoin(($this->defectOutOutputType == 'packing' ? 'output_defects_packing' : $this->defectOutOutputType == 'qcf' ? 'output_check_finishing' : 'output_defects')." as output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
+                leftJoin(($this->defectOutOutputType == 'packing' ? 'output_defects_packing' : ($this->defectOutOutputType == 'qcf' ? 'output_check_finishing' : 'output_defects'))." as output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
                 leftJoin("user_sb_wip", "user_sb_wip.id", "=", "output_defects.created_by")->
                 leftJoin("userpassword", "userpassword.line_id", "=", "user_sb_wip.line_id")->
                 leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
@@ -985,7 +985,7 @@ class DefectInOut extends Component
                 so_det.size,
                 COUNT(output_defect_in_out.id) defect_qty
             ")->
-            leftJoin(($this->defectOutOutputType == 'packing' ? 'output_defects_packing' : $this->defectOutOutputType == 'qcf' ? 'output_check_finishing' : 'output_defects')." as output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
+            leftJoin(($this->defectOutOutputType == 'packing' ? 'output_defects_packing' : ($this->defectOutOutputType == 'qcf' ? 'output_check_finishing' : 'output_defects'))." as output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
             leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
             leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
             leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
