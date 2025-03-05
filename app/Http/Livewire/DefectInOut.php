@@ -205,7 +205,10 @@ class DefectInOut extends Component
                 leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
                 leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
                 leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
-                leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_defects.id")->
+                leftJoin("output_defect_in_out", function ($join) {
+                    $join->on("output_defect_in_out.id", "=", "output_defects.id");
+                    $join->on("output_defect_in_out.output_type", "=", DB::raw("'qc'"));
+                })->
                 whereNotNull("output_defects.id")->
                 where("output_defects.defect_status", "defect")->
                 where("output_defect_types.allocation", Auth::user()->Groupp)->
@@ -234,7 +237,10 @@ class DefectInOut extends Component
                     leftJoin("master_plan", "master_plan.id", "=", "output_check_finishing.master_plan_id")->
                     leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
                     leftJoin("output_defect_types", "output_defect_types.id", "=", "output_check_finishing.defect_type_id")->
-                    leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_check_finishing.id")->
+                    leftJoin("output_defect_in_out", function ($join) {
+                        $join->on("output_defect_in_out.id", "=", "output_check_finishing.id");
+                        $join->on("output_defect_in_out.output_type", "=", DB::raw("'qcf'"));
+                    })->
                     where("output_check_finishing.status", "defect")->
                     where("output_defect_types.allocation", Auth::user()->Groupp)->
                     where("output_check_finishing.kode_numbering", $this->scannedDefectIn)->
@@ -262,7 +268,10 @@ class DefectInOut extends Component
                         leftJoin("master_plan", "master_plan.id", "=", "output_defects_packing.master_plan_id")->
                         leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
                         leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects_packing.defect_type_id")->
-                        leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_defects_packing.id")->
+                        leftJoin("output_defect_in_out", function ($join) {
+                            $join->on("output_defect_in_out.id", "=", "output_defects_packing.id");
+                            $join->on("output_defect_in_out.output_type", "=", DB::raw("'packing'"));
+                        })->
                         whereNotNull("output_defects_packing.id")->
                         where("output_defects_packing.defect_status", "defect")->
                         where("output_defect_types.allocation", Auth::user()->Groupp)->
@@ -294,7 +303,10 @@ class DefectInOut extends Component
                 leftJoin("master_plan", "master_plan.id", "=", "output_defects_packing.master_plan_id")->
                 leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
                 leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects_packing.defect_type_id")->
-                leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_defects_packing.id")->
+                leftJoin("output_defect_in_out", function ($join) {
+                    $join->on("output_defect_in_out.id", "=", "output_defects_packing.id");
+                    $join->on("output_defect_in_out.output_type", "=", DB::raw("'packing'"));
+                })->
                 whereNotNull("output_defects_packing.id")->
                 where("output_defects_packing.defect_status", "defect")->
                 where("output_defect_types.allocation", Auth::user()->Groupp)->
@@ -320,7 +332,10 @@ class DefectInOut extends Component
                 leftJoin("master_plan", "master_plan.id", "=", "output_check_finishing.master_plan_id")->
                 leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
                 leftJoin("output_defect_types", "output_defect_types.id", "=", "output_check_finishing.defect_type_id")->
-                leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_check_finishing.id")->
+                leftJoin("output_defect_in_out", function ($join) {
+                    $join->on("output_defect_in_out.id", "=", "output_check_finishing.id");
+                    $join->on("output_defect_in_out.output_type", "=", DB::raw("'qcf'"));
+                })->
                 where("output_check_finishing.status", "defect")->
                 where("output_defect_types.allocation", Auth::user()->Groupp)->
                 where("output_check_finishing.kode_numbering", $this->scannedDefectIn)->
@@ -345,7 +360,10 @@ class DefectInOut extends Component
                 leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
                 leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
                 leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
-                leftJoin("output_defect_in_out", "output_defect_in_out.defect_id", "=", "output_defects.id")->
+                leftJoin("output_defect_in_out", function ($join) {
+                    $join->on("output_defect_in_out.id", "=", "output_defects.id");
+                    $join->on("output_defect_in_out.output_type", "=", DB::raw("'qc'"));
+                })->
                 whereNotNull("output_defects.id")->
                 where("output_defects.defect_status", "defect")->
                 where("output_defect_types.allocation", Auth::user()->Groupp)->
