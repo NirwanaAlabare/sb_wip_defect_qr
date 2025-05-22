@@ -40,6 +40,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/get-defect-in-out-daily', 'getDefectInOutDaily')->name("get-defect-in-out-daily");
         Route::get('/get-defect-in-out-detail', 'getDefectInOutDetail')->name("get-defect-in-out-detail");
         Route::get('/get-defect-in-out-detail-total', 'getDefectInOutDetailTotal')->name("get-defect-in-out-detail-total");
+
+        Route::post('/export-defect-in-out', 'exportDefectInOut')->name("export-defect-in-out");
     });
 
     Route::controller(ProductionController::class)->prefix('production-panel')->group(function () {

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\SignalBit\MasterPlan;
 use App\Models\SignalBit\Defect;
 use App\Models\SignalBit\DefectInOut;
+use App\Exports\DefectInOutExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -341,5 +343,9 @@ class DefectInOutController extends Controller
             get();
 
         return array("defectIn" => $defectInOutQuery->count(), "defectProcess" => $defectInOutQuery->where("status", "defect")->count(), "defectOut" => $defectInOutQuery->where("status", "reworked")->count());
+    }
+
+    public function exportDefectInOut(Request $request) {
+        return Excel::download(new DefectInOutExport($request->dateFrom, $request->dateTo), 'Report Defect In Out.xlsx');
     }
 }
