@@ -366,15 +366,20 @@
                 </div>
                 <div class="card-body">
                     <div>
-                        <div class="d-flex align-items-end gap-3 mb-3">
-                            <div>
-                                <label class="form-label">From</label>
-                                <input type="date" class="form-control" value="{{ date("Y-m-d", strtotime("-7 days")) }}" id="dateFrom" wire:model="defectInOutFrom" onchange="defectInOutReload()">
+                        <div class="d-flex align-items-end justify-content-between">
+                            <div class="d-flex align-items-end gap-3 mb-3">
+                                <div>
+                                    <label class="form-label">From</label>
+                                    <input type="date" class="form-control" value="{{ date("Y-m-d", strtotime("-7 days")) }}" id="dateFrom" wire:model="defectInOutFrom" onchange="defectInOutReload()">
+                                </div>
+                                <span class="mb-2">-</span>
+                                <div>
+                                    <label class="form-label">To</label>
+                                    <input type="date" class="form-control" value="{{ date("Y-m-d") }}" id="dateTo" wire:model="defectInOutTo" onchange="defectInOutReload()">
+                                </div>
                             </div>
-                            <span class="mb-2">-</span>
-                            <div>
-                                <label class="form-label">To</label>
-                                <input type="date" class="form-control" value="{{ date("Y-m-d") }}" id="dateTo" wire:model="defectInOutTo" onchange="defectInOutReload()">
+                            <div class="mb-3" wire:ignore>
+                                <button class="btn btn-success" onclick="exportExcel(this)"><i class="fa fa-file-excel"></i> Export</button>
                             </div>
                         </div>
                         <div class="table-responsive" wire:ignore>
@@ -1155,6 +1160,70 @@
             defectInOutDetailReload();
 
             $("#defect-in-out-modal").modal("show");
+        }
+
+        function exportExcel(elm) {
+            elm.setAttribute('disabled', 'true');
+            elm.innerText = "";
+            let loading = document.createElement('div');
+            loading.classList.add('loading-small');
+            elm.appendChild(loading);
+
+            iziToast.info({
+                title: 'Exporting...',
+                message: 'Data sedang di export. Mohon tunggu...',
+                position: 'topCenter'
+            });
+
+            $.ajax({
+                url: "{{ route("export-defect-in-out") }}",
+                type: 'post',
+                data: {
+                    dateFrom : $("#dateFrom").val(),
+                    dateTo : $("#dateTo").val(),
+                },
+                xhrFields: { responseType : 'blob' },
+                success: function(res) {
+                    elm.removeAttribute('disabled');
+                    elm.innerText = "Export ";
+                    let icon = document.createElement('i');
+                    icon.classList.add('fa-solid');
+                    icon.classList.add('fa-file-excel');
+                    elm.appendChild(icon);
+
+                    iziToast.success({
+                        title: 'Success',
+                        message: 'Data berhasil di export.',
+                        position: 'topCenter'
+                    });
+
+                    var blob = new Blob([res]);
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = "Defect In Out {{ Auth::user()->Groupp }} "+$("#dateFrom").val()+" - "+$("#dateTo").val()+".xlsx";
+                    link.click();
+                }, error: function (jqXHR) {
+                    elm.removeAttribute('disabled');
+                    elm.innerText = "Export ";
+                    let icon = document.createElement('i');
+                    icon.classList.add('fa-solid');
+                    icon.classList.add('fa-file-excel');
+                    elm.appendChild(icon);
+
+                    let res = jqXHR.responseJSON;
+                    let message = '';
+                    console.log(res.message);
+                    for (let key in res.errors) {
+                        message += res.errors[key]+' ';
+                        document.getElementById(key).classList.add('is-invalid');
+                    };
+                    iziToast.error({
+                        title: 'Error',
+                        message: message,
+                        position: 'topCenter'
+                    });
+                }
+            });
         }
     </script>
 @endpush
