@@ -383,7 +383,8 @@ class DefectInOut extends Component
                         "output_type" => $scannedDefect->output_type,
                         "created_by" => Auth::user()->id,
                         "created_at" => Carbon::now(),
-                        "updated_at" => Carbon::now()
+                        "updated_at" => Carbon::now(),
+                        "reworked_at" => null
                     ]);
 
                     if ($createDefectInOut) {
@@ -489,8 +490,8 @@ class DefectInOut extends Component
                         $updateDefectInOut = DefectInOutModel::where("defect_id", $scannedDefect->id)->update([
                             "status" => "reworked",
                             "created_by" => Auth::user()->username,
-                            "reworked_at" => Carbon::now(),
-                            "updated_at" => Carbon::now()
+                            "updated_at" => Carbon::now(),
+                            "reworked_at" => Carbon::now()
                         ]);
 
                         if ($updateDefectInOut) {
