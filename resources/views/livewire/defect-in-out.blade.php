@@ -45,7 +45,7 @@
                                         <option value="all">ALL</option>
                                         <option value="qc">QC</option>
                                         {{-- <option value="qcf">QC FINISHING</option> --}}
-                                        <option value="packing">PACKING</option>
+                                        <option value="packing">FINISHING</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -111,7 +111,7 @@
                                                     <td>{{ $defectIn->size }}</td>
                                                     <td>{{ $defectIn->defect_type }}</td>
                                                     <td>{{ $defectIn->defect_qty }}</td>
-                                                    <td class="fw-bold {{ $defectIn->output_type == 'qc' ? 'text-danger' : ($defectIn->output_type == 'qcf' ? 'text-pink' : 'text-success') }}">{{ strtoupper($defectIn->output_type) }}</td>
+                                                    <td class="fw-bold {{ $defectIn->output_type == 'qc' ? 'text-danger' : ($defectIn->output_type == 'qcf' ? 'text-pink' : 'text-success') }}">{{ $defectIn->output_type == "packing" ? "FINISHING" : strtoupper($defectIn->output_type) }}</td>
                                                     {{-- <td>{{ $defectIn->updated_at }}</td> --}}
                                                     {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}" style="scale: 1.3" {{ $thisDefectInChecked && $thisDefectInChecked->count() > 0 ? "checked" : ""  }} onchange="defectInCheck(this)"></td>
                                                     <td><button class="btn btn-sm btn-defect fw-bold" wire:click='preSaveSelectedDefectIn("{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}")'>IN</button></td> --}}
@@ -162,7 +162,7 @@
                                         <option value="all">ALL</option>
                                         <option value="qc">QC</option>
                                         {{-- <option value="qcf">QC FINISHING</option> --}}
-                                        <option value="packing">PACKING</option>
+                                        <option value="packing">FINISHING</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -228,7 +228,7 @@
                                                     <td>{{ $defectOut->size }}</td>
                                                     <td>{{ $defectOut->defect_type }}</td>
                                                     <td>{{ $defectOut->defect_qty }}</td>
-                                                    <td class="fw-bold {{ $defectOut->output_type == 'qc' ? 'text-danger' : ($defectOut->output_type == 'qcf' ? 'text-pink' : 'text-success') }}">{{ strtoupper($defectOut->output_type) }}</td>
+                                                    <td class="fw-bold {{ $defectOut->output_type == 'qc' ? 'text-danger' : ($defectOut->output_type == 'qcf' ? 'text-pink' : 'text-success') }}">{{ $defectOut->output_type == "packing" ? "FINISHING" : strtoupper($defectOut->output_type) }}</td>
                                                     {{-- <td>{{ $defectOut->updated_at }}</td> --}}
                                                     {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}" style="scale: 1.3" {{ $thisDefectOutChecked && $thisDefectOutChecked->count() > 0 ? "checked" : ""  }} onchange="defectOutCheck(this)"></td>
                                                     <td><button class="btn btn-sm btn-rework fw-bold" wire:click="preSaveSelectedDefectOut('{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}')">OUT</button></td> --}}
@@ -465,7 +465,7 @@
                                     <option value="">All Department</option>
                                     <option value="qc">QC</option>
                                     {{-- <option value="qcf">QC FINISHING</option> --}}
-                                    <option value="packing">PACKING</option>
+                                    <option value="packing">FINISHING</option>
                                 </select>
                             </div>
                         </div>
@@ -1078,7 +1078,7 @@
                             textColor = "text-danger";
                         }
 
-                        return `<span class="`+textColor+` fw-bold">`+(data ? data.toUpperCase() : '-')+`</span>`;
+                        return `<span class="`+textColor+` fw-bold">`+(data ? (data == "packing" ? "FINISHING" : data.toUpperCase()) : '-')+`</span>`;
                     }
                 },
                 {

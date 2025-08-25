@@ -21,7 +21,7 @@
                 <td style="border: 1px solid black;">{{ $defect->time_in }}</td>
                 <td style="border: 1px solid black;">{{ $defect->time_out }}</td>
                 <td style="border: 1px solid black;">{{ $defect->sewing_line }}</td>
-                <td style="border: 1px solid black;">{{ $defect->output_type }}</td>
+                <td style="border: 1px solid black;">{{ ($defect->output_type == "packing" ? "finishing" : $defect->output_type) }}</td>
                 <td style="border: 1px solid black;">{{ $defect->kode_numbering }}</td>
                 <td style="border: 1px solid black;">{{ $defect->no_ws }}</td>
                 <td style="border: 1px solid black;">{{ $defect->style }}</td>
