@@ -23,7 +23,6 @@ class SubmitAllReworkJob implements ShouldQueue
      */
     public function __construct($defect)
     {
-        $this->
         $this->onQueue('processing');
     }
 

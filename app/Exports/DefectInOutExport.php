@@ -31,7 +31,7 @@ class DefectInOutExport implements FromView, ShouldAutoSize
                 output_defect_in_out.output_type,
                 output_defect_in_out.kode_numbering,
                 (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno ELSE act_costing.kpno END) END) no_ws,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno ELSE act_costing.styleno END) END) style,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno ELSE act_costing.styleno END) END) style,
                 (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.color ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.color ELSE so_det.color END) END) color,
                 (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size ELSE so_det.size END) END) size,
                 (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type ELSE output_defect_types.defect_type END) END) defect_type,
