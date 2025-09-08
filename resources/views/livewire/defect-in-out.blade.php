@@ -1,5 +1,5 @@
 <div>
-    <div class="loading-container-fullscreen" wire:loading wire:target="changeMode, preSaveSelectedDefectIn, saveSelectedDefectIn, saveCheckedDefectIn, saveAllDefectIn, preSaveSelectedDefectOut, saveSelectedDefectOut, saveCheckedDefectOut, saveAllDefectOut, submitDefectIn, submitDefectOut, submitDefectOut, refreshComponent, defectInOutputType, defectInLine, defectOutOutputType, defectOutLine, showDefectAreaImage">
+    <div class="loading-container-fullscreen" wire:loading wire:target="changeMode, preSaveSelectedDefectIn, saveSelectedDefectIn, saveCheckedDefectIn, saveAllDefectIn, preSaveSelectedDefectOut, saveSelectedDefectOut, saveCheckedDefectOut, saveAllDefectOut, submitDefectIn, submitDefectOut, submitDefectOut, refreshComponent, defectInOutputType, defectInLine, defectOutOutputType, defectOutLine, showDefectAreaImage, defectOutFilterKode, defectInFilterKode, defectOutFilterWaktu, defectInFilterWaktu, defectOutFilterLine, defectInFilterLine, defectOutFilterMasterPlan, defectInFilterMasterPlan, defectOutFilterSize, defectInFilterSize, defectOutFilterType, defectInFilterType">
         <div class="loading-container">
             <div class="loading"></div>
         </div>
@@ -84,6 +84,38 @@
                                             {{-- <th>Waktu</th> --}}
                                             {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-in-select-all" onclick="defectInSelectAll(this)" style="scale: 1.3"></th>
                                             <th>IN</th> --}}
+                                        </tr>
+                                        <tr class="text-center align-middle">
+                                            <td>
+
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectInFilterKode">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectInFilterWaktu">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectInFilterLine">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectInFilterMasterPlan">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectInFilterSize">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectInFilterType">
+                                            </td>
+                                            <td>
+
+                                            </td>
+                                            <td>
+
+                                            </td>
+                                            <td>
+
+                                            </td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -201,6 +233,38 @@
                                             {{-- <th>Waktu</th> --}}
                                             {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-out-select-all" onchange="defectOutSelectAll(this)" style="scale: 1.3"></th>
                                             <th>IN</th> --}}
+                                        </tr>
+                                        <tr class="text-center align-middle">
+                                            <td>
+
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectOutFilterKode">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectOutFilterWaktu">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectOutFilterLine">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectOutFilterMasterPlan">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectOutFilterSize">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" wire:model="defectOutFilterType">
+                                            </td>
+                                            <td>
+
+                                            </td>
+                                            <td>
+
+                                            </td>
+                                            <td>
+
+                                            </td>
                                         </tr>
                                     </thead>
                                     <tbody>
