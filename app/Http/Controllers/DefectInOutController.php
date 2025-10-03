@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\SignalBit\MasterPlan;
 use App\Models\SignalBit\Defect;
+use App\Models\SignalBit\DefectPacking;
+use App\Models\SignalBit\OutputFinishing;
 use App\Models\SignalBit\DefectInOut;
 use App\Exports\DefectInOutExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
+use Carbon\Carbon;
 use DB;
 
 class DefectInOutController extends Controller
@@ -145,7 +148,7 @@ class DefectInOutController extends Controller
             $additionalQuery .= " AND output_defects.defect_area_id = '".$request->defect_area."' ";
         }
 
-        $defects = Defect::selectRaw("
+        $defects = DB::table("output_defects")->selectRaw("
                 output_defects.defect_type_id as id,
                 output_defect_types.defect_type,
                 COUNT(output_defects.id) defect_qty
@@ -184,7 +187,7 @@ class DefectInOutController extends Controller
             $additionalQuery .= " AND output_defects.defect_type_id = '".$request->defect_type."' ";
         }
 
-        $defects = Defect::selectRaw("
+        $defects = DB::table("output_defects")->selectRaw("
                 output_defects.defect_area_id as id,
                 output_defect_areas.defect_area,
                 COUNT(output_defects.id) defect_qty
@@ -343,6 +346,701 @@ class DefectInOutController extends Controller
             get();
 
         return array("defectIn" => $defectInOutQuery->count(), "defectProcess" => $defectInOutQuery->where("status", "defect")->count(), "defectOut" => $defectInOutQuery->where("status", "reworked")->count());
+    }
+
+    public function getDefectInList(Request $request)
+    {
+        if ($request->defectInOutputType == 'all') {
+            // Defect Packing
+            $defectInPackingQuery = DB::table("output_defects_packing")->selectRaw("
+                master_plan.id master_plan_id,
+                master_plan.id_ws,
+                master_plan.sewing_line,
+                act_costing.kpno as ws,
+                act_costing.styleno as style,
+                master_plan.color as color,
+                output_defects_packing.kode_numbering,
+                output_defects_packing.defect_type_id,
+                output_defect_types.defect_type,
+                output_defects_packing.so_det_id,
+                output_defects_packing.updated_at as defect_time,
+                so_det.size,
+                'packing' output_type,
+                COUNT(output_defects_packing.id) defect_qty
+            ")->
+            leftJoin("so_det", "so_det.id", "=", "output_defects_packing.so_det_id")->
+            leftJoin("master_plan", "master_plan.id", "=", "output_defects_packing.master_plan_id")->
+            leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+            leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects_packing.defect_type_id")->
+            leftJoin("output_defect_in_out", function($join) {
+                $join->on("output_defect_in_out.defect_id", "=", "output_defects_packing.id");
+                $join->on("output_defect_in_out.output_type", "=", DB::raw("'packing'"));
+            })->
+            whereNotNull("master_plan.id")->
+            where("output_defects_packing.defect_status", "defect")->
+            where("output_defect_types.allocation", Auth::user()->Groupp)->
+            whereNull("output_defect_in_out.id")->
+            whereRaw("YEAR(output_defects_packing.updated_at) = '".date("Y")."'");
+            if ($request->defectInSearch) {
+                $defectInPackingQuery->whereRaw("(
+                    master_plan.tgl_plan LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.sewing_line LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.kpno LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.styleno LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.color LIKE '%".$request->defectInSearch."%' OR
+                    output_defect_types.defect_type LIKE '%".$request->defectInSearch."%' OR
+                    so_det.size LIKE '%".$request->defectInSearch."%' OR
+                    output_defects_packing.kode_numbering LIKE '%".$request->defectInSearch."%'
+                )");
+            }
+            // if ($request->defectInDate) {
+            //     $defectInPackingQuery->where("master_plan.tgl_plan", $request->defectInDate);
+            // }
+            if ($request->defectInLine) {
+                $defectInPackingQuery->where("master_plan.sewing_line", $request->defectInLine);
+            }
+            if ($request->defectInSelectedMasterPlan) {
+                $defectInPackingQuery->where("master_plan.id", $request->defectInSelectedMasterPlan);
+            }
+            if ($request->defectInSelectedSize) {
+                $defectInPackingQuery->where("output_defects_packing.so_det_id", $request->defectInSelectedSize);
+            }
+            if ($request->defectInSelectedType) {
+                $defectInPackingQuery->where("output_defects_packing.defect_type_id", $request->defectInSelectedType);
+            }
+            $defectInPacking = $defectInPackingQuery->
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects_packing.so_det_id", "output_defects_packing.kode_numbering");
+
+            // Defect In QCF
+            $defectInQcfQuery = DB::table("output_check_finishing")->selectRaw("
+                master_plan.id master_plan_id,
+                master_plan.id_ws,
+                master_plan.sewing_line,
+                act_costing.kpno as ws,
+                act_costing.styleno as style,
+                master_plan.color as color,
+                output_check_finishing.kode_numbering,
+                output_check_finishing.defect_type_id,
+                output_defect_types.defect_type,
+                output_check_finishing.so_det_id,
+                output_check_finishing.updated_at as defect_time,
+                so_det.size,
+                'qcf' output_type,
+                COUNT(output_check_finishing.id) defect_qty
+            ")->
+            leftJoin("so_det", "so_det.id", "=", "output_check_finishing.so_det_id")->
+            leftJoin("master_plan", "master_plan.id", "=", "output_check_finishing.master_plan_id")->
+            leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+            leftJoin("output_defect_types", "output_defect_types.id", "=", "output_check_finishing.defect_type_id")->
+            leftJoin("output_defect_in_out", function($join) {
+                $join->on("output_defect_in_out.defect_id", "=", "output_check_finishing.id");
+                $join->on("output_defect_in_out.output_type", "=", DB::raw("'qcf'"));
+            })->
+            whereNotNull("master_plan.id")->
+            where("output_check_finishing.status", "defect")->
+            where("output_defect_types.allocation", Auth::user()->Groupp)->
+            whereNull("output_defect_in_out.id")->
+            whereRaw("YEAR(output_check_finishing.updated_at) = '".date("Y")."'");
+            if ($request->defectInSearch) {
+                $defectInQcfQuery->whereRaw("(
+                    master_plan.tgl_plan LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.sewing_line LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.kpno LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.styleno LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.color LIKE '%".$request->defectInSearch."%' OR
+                    output_defect_types.defect_type LIKE '%".$request->defectInSearch."%' OR
+                    so_det.size LIKE '%".$request->defectInSearch."%' OR
+                    output_check_finishing.kode_numbering LIKE '%".$request->defectInSearch."%'
+                )");
+            }
+            // if ($request->defectInDate) {
+            //     $defectInQcfQuery->where("master_plan.tgl_plan", $request->defectInDate);
+            // }
+            if ($request->defectInLine) {
+                $defectInQcfQuery->where("master_plan.sewing_line", $request->defectInLine);
+            }
+            if ($request->defectInSelectedMasterPlan) {
+                $defectInQcfQuery->where("master_plan.id", $request->defectInSelectedMasterPlan);
+            }
+            if ($request->defectInSelectedSize) {
+                $defectInQcfQuery->where("output_check_finishing.so_det_id", $request->defectInSelectedSize);
+            }
+            if ($request->defectInSelectedType) {
+                $defectInQcfQuery->where("output_check_finishing.defect_type_id", $request->defectInSelectedType);
+            }
+            $defectInQcf = $defectInQcfQuery->
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_check_finishing.so_det_id", "output_check_finishing.kode_numbering");
+
+            $defectInQcQuery = DB::table("output_defects")->selectRaw("
+                master_plan.id master_plan_id,
+                master_plan.id_ws,
+                master_plan.sewing_line,
+                act_costing.kpno as ws,
+                act_costing.styleno as style,
+                master_plan.color as color,
+                output_defects.kode_numbering,
+                output_defects.defect_type_id,
+                output_defect_types.defect_type,
+                output_defects.so_det_id,
+                output_defects.updated_at as defect_time,
+                so_det.size,
+                'qc' output_type,
+                COUNT(output_defects.id) defect_qty
+            ")->
+            leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
+            leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
+            leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+            leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
+            leftJoin("output_defect_in_out", function($join) {
+                $join->on("output_defect_in_out.defect_id", "=", "output_defects.id");
+                $join->on("output_defect_in_out.output_type", "=", DB::raw("'qc'"));
+            })->
+            whereNotNull("master_plan.id")->
+            where("output_defects.defect_status", "defect")->
+            where("output_defect_types.allocation", Auth::user()->Groupp)->
+            whereNull("output_defect_in_out.id")->
+            whereRaw("YEAR(output_defects.updated_at) = '".date("Y")."'");
+            if ($request->defectInSearch) {
+                $defectInQcQuery->whereRaw("(
+                    master_plan.tgl_plan LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.sewing_line LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.kpno LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.styleno LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.color LIKE '%".$request->defectInSearch."%' OR
+                    output_defect_types.defect_type LIKE '%".$request->defectInSearch."%' OR
+                    so_det.size LIKE '%".$request->defectInSearch."%' OR
+                    output_defects.kode_numbering LIKE '%".$request->defectInSearch."%'
+                )");
+            }
+            // if ($request->defectInDate) {
+            //     $defectInQcQuery->where("master_plan.tgl_plan", $request->defectInDate);
+            // }
+            if ($request->defectInLine) {
+                $defectInQcQuery->where("master_plan.sewing_line", $request->defectInLine);
+            }
+            if ($request->defectInSelectedMasterPlan) {
+                $defectInQcQuery->where("master_plan.id", $request->defectInSelectedMasterPlan);
+            }
+            if ($request->defectInSelectedSize) {
+                $defectInQcQuery->where("output_defects.so_det_id", $request->defectInSelectedSize);
+            }
+            if ($request->defectInSelectedType) {
+                $defectInQcQuery->where("output_defects.defect_type_id", $request->defectInSelectedType);
+            }
+            $defectInQc = $defectInQcQuery->
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defects.kode_numbering");
+
+            $defectInUnion = $defectInQc->unionAll($defectInQcf)->unionAll($defectInPacking);
+
+            $defectInQuery = DB::query()->fromSub($defectInUnion, 'defects');
+
+            if ($request->defectInFilterKode) {
+                $defectInQuery->where("kode_numbering", "LIKE", "%".$request->defectInFilterKode."%");
+            }
+            if ($request->defectInFilterWaktu) {
+                $defectInQuery->where("defect_time", "LIKE", "%".$request->defectInFilterWaktu."%");
+            }
+            if ($request->defectInFilterLine) {
+                $defectInQuery->where("sewing_line", "LIKE", "%".str_replace(" ", "_", $request->defectInFilterLine)."%");
+            }
+            if ($request->defectInFilterMasterPlan) {
+                $defectInQuery->whereRaw("(
+                    ws LIKE '%".$request->defectInFilterMasterPlan."%' OR
+                    style LIKE '%".$request->defectInFilterMasterPlan."%' OR
+                    color LIKE '%".$request->defectInFilterMasterPlan."%'
+                )");
+            }
+            if ($request->defectInFilterSize) {
+                $defectInQuery->where("size", "LIKE", "%".$request->defectInFilterSize."%");
+            }
+            if ($request->defectInFilterType) {
+                $defectInQuery->where("defect_type", "LIKE", "%".$request->defectInFilterType."%");
+            }
+
+            $defectIn = $defectInQuery;
+
+        } else if ($request->defectInOutputType == 'packing') {
+            $defectInQuery = DB::table("output_defects_packing")->selectRaw("
+                master_plan.id master_plan_id,
+                master_plan.id_ws,
+                master_plan.sewing_line,
+                act_costing.kpno as ws,
+                act_costing.styleno as style,
+                master_plan.color as color,
+                output_defects_packing.kode_numbering,
+                output_defects_packing.defect_type_id,
+                output_defect_types.defect_type,
+                output_defects_packing.so_det_id,
+                output_defects_packing.updated_at as defect_time,
+                so_det.size,
+                'packing' output_type,
+                COUNT(output_defects_packing.id) defect_qty
+            ")->
+            leftJoin("so_det", "so_det.id", "=", "output_defects_packing.so_det_id")->
+            leftJoin("master_plan", "master_plan.id", "=", "output_defects_packing.master_plan_id")->
+            leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+            leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects_packing.defect_type_id")->
+            leftJoin("output_defect_in_out", function($join) {
+                $join->on("output_defect_in_out.defect_id", "=", "output_defects_packing.id");
+                $join->on("output_defect_in_out.output_type", "=", DB::raw("'packing'"));
+            })->
+            whereNotNull("master_plan.id")->
+            where("output_defects_packing.defect_status", "defect")->
+            where("output_defect_types.allocation", Auth::user()->Groupp)->
+            whereNull("output_defect_in_out.id")->
+            whereRaw("YEAR(output_defects_packing.updated_at) = '".date("Y")."'");
+            if ($request->defectInSearch) {
+                $defectInQuery->whereRaw("(
+                    master_plan.tgl_plan LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.sewing_line LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.kpno LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.styleno LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.color LIKE '%".$request->defectInSearch."%' OR
+                    output_defect_types.defect_type LIKE '%".$request->defectInSearch."%' OR
+                    so_det.size LIKE '%".$request->defectInSearch."%' OR
+                    output_defects_packing.kode_numbering LIKE '%".$request->defectInSearch."%'
+                )");
+            }
+            // if ($request->defectInDate) {
+            //     $defectInQuery->where("master_plan.tgl_plan", $request->defectInDate);
+            // }
+            if ($request->defectInLine) {
+                $defectInQuery->where("master_plan.sewing_line", $request->defectInLine);
+            }
+            if ($request->defectInSelectedMasterPlan) {
+                $defectInQuery->where("master_plan.id", $request->defectInSelectedMasterPlan);
+            }
+            if ($request->defectInSelectedSize) {
+                $defectInQuery->where("output_defects_packing.so_det_id", $request->defectInSelectedSize);
+            }
+            if ($request->defectInSelectedType) {
+                $defectInQuery->where("output_defects_packing.defect_type_id", $request->defectInSelectedType);
+            }
+            if ($request->defectInFilterKode) {
+                $defectInQuery->where("output_defects_packing.kode_numbering", "LIKE", "%".$request->defectInFilterKode."%");
+            }
+            if ($request->defectInFilterWaktu) {
+                $defectInQuery->where("output_defects_packing.updated_at", "LIKE", "%".$request->defectInFilterWaktu."%");
+            }
+            if ($request->defectInFilterLine) {
+                $defectInQuery->where("master_plan.sewing_line", "LIKE", "%".str_replace(" ", "_", $request->defectInFilterLine)."%");
+            }
+            if ($request->defectInFilterMasterPlan) {
+                $defectInQuery->whereRaw("(
+                    act_costing.kpno LIKE '%".$request->defectInFilterMasterPlan."%' OR
+                    act_costing.styleno LIKE '%".$request->defectInFilterMasterPlan."%' OR
+                    master_plan.color LIKE '%".$request->defectInFilterMasterPlan."%'
+                )");
+            }
+            if ($request->defectInFilterSize) {
+                $defectInQuery->where("so_det.size", "LIKE", "%".$request->defectInFilterSize."%");
+            }
+            if ($request->defectInFilterType) {
+                $defectInQuery->where("output_defect_types.defect_type", "LIKE", "%".$request->defectInFilterType."%");
+            }
+            $defectIn = $defectInQuery->
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects_packing.so_det_id", "output_defects_packing.kode_numbering");
+        } else if ($request->defectInOutputType == 'qcf') {
+            $defectInQuery = DB::table("output_check_finishing")->selectRaw("
+                master_plan.id master_plan_id,
+                master_plan.id_ws,
+                master_plan.sewing_line,
+                act_costing.kpno as ws,
+                act_costing.styleno as style,
+                master_plan.color as color,
+                output_check_finishing.kode_numbering,
+                output_check_finishing.defect_type_id,
+                output_defect_types.defect_type,
+                output_check_finishing.so_det_id,
+                output_check_finishing.updated_at as defect_time,
+                so_det.size,
+                'qcf' output_type,
+                COUNT(output_check_finishing.id) defect_qty
+            ")->
+            leftJoin("so_det", "so_det.id", "=", "output_check_finishing.so_det_id")->
+            leftJoin("master_plan", "master_plan.id", "=", "output_check_finishing.master_plan_id")->
+            leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+            leftJoin("output_defect_types", "output_defect_types.id", "=", "output_check_finishing.defect_type_id")->
+            leftJoin("output_defect_in_out", function($join) {
+                $join->on("output_defect_in_out.defect_id", "=", "output_check_finishing.id");
+                $join->on("output_defect_in_out.output_type", "=", DB::raw("'qcf'"));
+            })->
+            whereNotNull("master_plan.id")->
+            where("output_check_finishing.status", "defect")->
+            where("output_defect_types.allocation", Auth::user()->Groupp)->
+            whereNull("output_defect_in_out.id")->
+            whereRaw("YEAR(output_check_finishing.updated_at) = '".date("Y")."'");
+            if ($request->defectInSearch) {
+                $defectInQuery->whereRaw("(
+                    master_plan.tgl_plan LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.sewing_line LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.kpno LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.styleno LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.color LIKE '%".$request->defectInSearch."%' OR
+                    output_defect_types.defect_type LIKE '%".$request->defectInSearch."%' OR
+                    so_det.size LIKE '%".$request->defectInSearch."%' OR
+                    output_check_finishing.kode_numbering LIKE '%".$request->defectInSearch."%'
+                )");
+            }
+            if ($request->defectInDate) {
+                $defectInQuery->where("master_plan.tgl_plan", $request->defectInDate);
+            }
+            if ($request->defectInLine) {
+                $defectInQuery->where("master_plan.sewing_line", $request->defectInLine);
+            }
+            if ($request->defectInSelectedMasterPlan) {
+                $defectInQuery->where("master_plan.id", $request->defectInSelectedMasterPlan);
+            }
+            if ($request->defectInSelectedSize) {
+                $defectInQuery->where("output_check_finishing.so_det_id", $request->defectInSelectedSize);
+            }
+            if ($request->defectInSelectedType) {
+                $defectInQuery->where("output_check_finishing.defect_type_id", $request->defectInSelectedType);
+            }
+            if ($request->defectInFilterKode) {
+                $defectInQuery->where("output_check_finishing.kode_numbering", "LIKE", "%".$request->defectInFilterKode."%");
+            }
+            if ($request->defectInFilterWaktu) {
+                $defectInQuery->where("output_check_finishing.updated_at", "LIKE", "%".$request->defectInFilterWaktu."%");
+            }
+            if ($request->defectInFilterLine) {
+                $defectInQuery->where("master_plan.sewing_line", "LIKE", "%".str_replace(" ", "_", $request->defectInFilterLine)."%");
+            }
+            if ($request->defectInFilterMasterPlan) {
+                $defectInQuery->whereRaw("(
+                    act_costing.kpno LIKE '%".$request->defectInFilterMasterPlan."%' OR
+                    act_costing.styleno LIKE '%".$request->defectInFilterMasterPlan."%' OR
+                    master_plan.color LIKE '%".$request->defectInFilterMasterPlan."%'
+                )");
+            }
+            if ($request->defectInFilterSize) {
+                $defectInQuery->where("so_det.size", "LIKE", "%".$request->defectInFilterSize."%");
+            }
+            if ($request->defectInFilterType) {
+                $defectInQuery->where("output_defect_types.defect_type", "LIKE", "%".$request->defectInFilterType."%");
+            }
+            $defectIn = $defectInQuery->
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_check_finishing.so_det_id", "output_check_finishing.kode_numbering");
+        } else {
+            $defectInQuery = DB::table("output_defects")->selectRaw("
+                master_plan.id master_plan_id,
+                master_plan.id_ws,
+                master_plan.sewing_line,
+                act_costing.kpno as ws,
+                act_costing.styleno as style,
+                master_plan.color as color,
+                output_defects.kode_numbering,
+                output_defects.defect_type_id,
+                output_defect_types.defect_type,
+                output_defects.so_det_id,
+                output_defects.updated_at as defect_time,
+                so_det.size,
+                'qc' output_type,
+                COUNT(output_defects.id) defect_qty
+            ")->
+            leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
+            leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
+            leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+            leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
+            leftJoin("output_defect_in_out", function($join) {
+                $join->on("output_defect_in_out.defect_id", "=", "output_defects.id");
+                $join->on("output_defect_in_out.output_type", "=", DB::raw("'qc'"));
+            })->
+            whereNotNull("master_plan.id")->
+            where("output_defects.defect_status", "defect")->
+            where("output_defect_types.allocation", Auth::user()->Groupp)->
+            whereNull("output_defect_in_out.id")->
+            whereRaw("YEAR(output_defects.updated_at) = '".date("Y")."'");
+            if ($request->defectInSearch) {
+                $defectInQuery->whereRaw("(
+                    master_plan.tgl_plan LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.sewing_line LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.kpno LIKE '%".$request->defectInSearch."%' OR
+                    act_costing.styleno LIKE '%".$request->defectInSearch."%' OR
+                    master_plan.color LIKE '%".$request->defectInSearch."%' OR
+                    output_defect_types.defect_type LIKE '%".$request->defectInSearch."%' OR
+                    so_det.size LIKE '%".$request->defectInSearch."%' OR
+                    output_defects.kode_numbering LIKE '%".$request->defectInSearch."%'
+                )");
+            }
+            // if ($request->defectInDate) {
+            //     $defectInQuery->where("master_plan.tgl_plan", $request->defectInDate);
+            // }
+            if ($request->defectInLine) {
+                $defectInQuery->where("master_plan.sewing_line", $request->defectInLine);
+            }
+            if ($request->defectInSelectedMasterPlan) {
+                $defectInQuery->where("master_plan.id", $request->defectInSelectedMasterPlan);
+            }
+            if ($request->defectInSelectedSize) {
+                $defectInQuery->where("output_defects.so_det_id", $request->defectInSelectedSize);
+            }
+            if ($request->defectInSelectedType) {
+                $defectInQuery->where("output_defects.defect_type_id", $request->defectInSelectedType);
+            }
+            if ($request->defectInFilterKode) {
+                $defectInQuery->where("output_defects.kode_numbering", "LIKE", "%".$request->defectInFilterKode."%");
+            }
+            if ($request->defectInFilterWaktu) {
+                $defectInQuery->where("output_defects.updated_at", "LIKE", "%".$request->defectInFilterWaktu."%");
+            }
+            if ($request->defectInFilterLine) {
+                $defectInQuery->where("master_plan.sewing_line", "LIKE", "%".str_replace(" ", "_", $request->defectInFilterLine)."%");
+            }
+            if ($request->defectInFilterMasterPlan) {
+                $defectInQuery->whereRaw("(
+                    act_costing.kpno LIKE '%".$request->defectInFilterMasterPlan."%' OR
+                    act_costing.styleno LIKE '%".$request->defectInFilterMasterPlan."%' OR
+                    master_plan.color LIKE '%".$request->defectInFilterMasterPlan."%'
+                )");
+            }
+            if ($request->defectInFilterSize) {
+                $defectInQuery->where("so_det.size", "LIKE", "%".$request->defectInFilterSize."%");
+            }
+            if ($request->defectInFilterType) {
+                $defectInQuery->where("output_defect_types.defect_type", "LIKE", "%".$request->defectInFilterType."%");
+            }
+            $defectIn = $defectInQuery->
+                groupBy("master_plan.sewing_line", "master_plan.id", "output_defect_types.id", "output_defects.so_det_id", "output_defects.kode_numbering");
+        }
+
+        $defectInList = $defectIn->
+            orderBy("defect_time", "desc")->
+            orderBy("sewing_line")->
+            orderBy("id_ws")->
+            orderBy("color")->
+            orderBy("defect_type")->
+            orderBy("so_det_id")->
+            orderBy("output_type")->
+            get();
+
+        return Datatables::of($defectInList)->toJson();
+    }
+
+    public function submitDefectIn(Request $request)
+    {
+        $status = "";
+        $message = "";
+
+        if ($request->scannedDefectIn) {
+            $scannedDefect = null;
+
+            if ($request->defectInOutputType == "all") {
+                $scannedDefect = collect(DB::select("
+                    SELECT * FROM (
+                        SELECT
+                            output_defects.id,
+                            output_defects.kode_numbering,
+                            output_defects.so_det_id,
+                            output_defect_types.defect_type,
+                            act_costing.kpno ws,
+                            act_costing.styleno style,
+                            so_det.color,
+                            so_det.size,
+                            userpassword.username,
+                            output_defect_in_out.id defect_in_id,
+                            'qc' output_type
+                        FROM
+                            `output_defects`
+                            LEFT JOIN `user_sb_wip` ON `user_sb_wip`.`id` = `output_defects`.`created_by`
+                            LEFT JOIN `userpassword` ON `userpassword`.`line_id` = `user_sb_wip`.`line_id`
+                            LEFT JOIN `so_det` ON `so_det`.`id` = `output_defects`.`so_det_id`
+                            LEFT JOIN `master_plan` ON `master_plan`.`id` = `output_defects`.`master_plan_id`
+                            LEFT JOIN `act_costing` ON `act_costing`.`id` = `master_plan`.`id_ws`
+                            LEFT JOIN `output_defect_types` ON `output_defect_types`.`id` = `output_defects`.`defect_type_id`
+                            LEFT JOIN `output_defect_in_out` ON `output_defect_in_out`.`id` = `output_defects`.`id`
+                            AND `output_defect_in_out`.`output_type` = 'qc'
+                        WHERE
+                            `output_defects`.`id` IS NOT NULL
+                            AND `output_defects`.`defect_status` = 'defect'
+                            AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
+                            AND `output_defects`.`kode_numbering` = '".$request->scannedDefectIn."'
+                        UNION ALL
+                            SELECT
+                            output_defects_packing.id,
+                            output_defects_packing.kode_numbering,
+                            output_defects_packing.so_det_id,
+                            output_defect_types.defect_type,
+                            act_costing.kpno ws,
+                            act_costing.styleno style,
+                            so_det.color,
+                            so_det.size,
+                            userpassword.username,
+                            output_defect_in_out.id defect_in_id,
+                            'packing' output_type
+                        FROM
+                            `output_defects_packing`
+                            LEFT JOIN `user_sb_wip` ON `user_sb_wip`.`id` = `output_defects_packing`.`created_by`
+                            LEFT JOIN `userpassword` ON `userpassword`.`line_id` = `user_sb_wip`.`line_id`
+                            LEFT JOIN `so_det` ON `so_det`.`id` = `output_defects_packing`.`so_det_id`
+                            LEFT JOIN `master_plan` ON `master_plan`.`id` = `output_defects_packing`.`master_plan_id`
+                            LEFT JOIN `act_costing` ON `act_costing`.`id` = `master_plan`.`id_ws`
+                            LEFT JOIN `output_defect_types` ON `output_defect_types`.`id` = `output_defects_packing`.`defect_type_id`
+                            LEFT JOIN `output_defect_in_out` ON `output_defect_in_out`.`id` = `output_defects_packing`.`id`
+                            AND `output_defect_in_out`.`output_type` = 'packing'
+                        WHERE
+                            `output_defects_packing`.`id` IS NOT NULL
+                            AND `output_defects_packing`.`defect_status` = 'defect'
+                            AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
+                            AND `output_defects_packing`.`kode_numbering` = '".$request->scannedDefectIn."'
+                        UNION ALL
+                            SELECT
+                            output_check_finishing.id,
+                            output_check_finishing.kode_numbering,
+                            output_check_finishing.so_det_id,
+                            output_defect_types.defect_type,
+                            act_costing.kpno ws,
+                            act_costing.styleno style,
+                            so_det.color,
+                            so_det.size,
+                            userpassword.username,
+                            output_defect_in_out.id defect_in_id,
+                            'qcf' output_type
+                        FROM
+                            `output_check_finishing`
+                            LEFT JOIN `user_sb_wip` ON `user_sb_wip`.`id` = `output_check_finishing`.`created_by`
+                            LEFT JOIN `userpassword` ON `userpassword`.`line_id` = `user_sb_wip`.`line_id`
+                            LEFT JOIN `so_det` ON `so_det`.`id` = `output_check_finishing`.`so_det_id`
+                            LEFT JOIN `master_plan` ON `master_plan`.`id` = `output_check_finishing`.`master_plan_id`
+                            LEFT JOIN `act_costing` ON `act_costing`.`id` = `master_plan`.`id_ws`
+                            LEFT JOIN `output_defect_types` ON `output_defect_types`.`id` = `output_check_finishing`.`defect_type_id`
+                            LEFT JOIN `output_defect_in_out` ON `output_defect_in_out`.`id` = `output_check_finishing`.`id`
+                            AND `output_defect_in_out`.`output_type` = 'qcf'
+                        WHERE
+                            `output_check_finishing`.`status` = 'defect'
+                            AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
+                            AND `output_check_finishing`.`kode_numbering` = '".$request->scannedDefectIn."'
+                    ) all_defect
+                "))->first();
+            } else if ($request->defectInOutputType == "packing") {
+                $scannedDefect = DB::table("output_defects_packing")->selectRaw("
+                    output_defects_packing.id,
+                    output_defects_packing.kode_numbering,
+                    output_defects_packing.so_det_id,
+                    output_defect_types.defect_type,
+                    act_costing.kpno ws,
+                    act_costing.styleno style,
+                    so_det.color,
+                    so_det.size,
+                    userpassword.username,
+                    output_defect_in_out.id defect_in_id,
+                    'packing' output_type
+                ")->
+                leftJoin("user_sb_wip", "user_sb_wip.id", "=", "output_defects_packing.created_by")->
+                leftJoin("userpassword", "userpassword.line_id", "=", "user_sb_wip.line_id")->
+                leftJoin("so_det", "so_det.id", "=", "output_defects_packing.so_det_id")->
+                leftJoin("master_plan", "master_plan.id", "=", "output_defects_packing.master_plan_id")->
+                leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+                leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects_packing.defect_type_id")->
+                leftJoin("output_defect_in_out", function ($join) {
+                    $join->on("output_defect_in_out.id", "=", "output_defects_packing.id");
+                    $join->on("output_defect_in_out.output_type", "=", DB::raw("'packing'"));
+                })->
+                whereNotNull("output_defects_packing.id")->
+                where("output_defects_packing.defect_status", "defect")->
+                where("output_defect_types.allocation", Auth::user()->Groupp)->
+                where("output_defects_packing.kode_numbering", $request->scannedDefectIn)->
+                first();
+            } else if ($request->defectInOutputType == "qcf") {
+                $scannedDefect = DB::table("output_finishing")->selectRaw("
+                    output_check_finishing.id,
+                    output_check_finishing.kode_numbering,
+                    output_check_finishing.so_det_id,
+                    output_defect_types.defect_type,
+                    act_costing.kpno ws,
+                    act_costing.styleno style,
+                    so_det.color,
+                    so_det.size,
+                    userpassword.username,
+                    output_defect_in_out.id defect_in_id,
+                    'qcf' output_type
+                ")->
+                leftJoin("user_sb_wip", "user_sb_wip.id", "=", "output_check_finishing.created_by")->
+                leftJoin("userpassword", "userpassword.line_id", "=", "user_sb_wip.line_id")->
+                leftJoin("so_det", "so_det.id", "=", "output_check_finishing.so_det_id")->
+                leftJoin("master_plan", "master_plan.id", "=", "output_check_finishing.master_plan_id")->
+                leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+                leftJoin("output_defect_types", "output_defect_types.id", "=", "output_check_finishing.defect_type_id")->
+                leftJoin("output_defect_in_out", function ($join) {
+                    $join->on("output_defect_in_out.id", "=", "output_check_finishing.id");
+                    $join->on("output_defect_in_out.output_type", "=", DB::raw("'qcf'"));
+                })->
+                where("output_check_finishing.status", "defect")->
+                where("output_defect_types.allocation", Auth::user()->Groupp)->
+                where("output_check_finishing.kode_numbering", $request->scannedDefectIn)->
+                first();
+            } else {
+                $scannedDefect = DB::table("output_defects")->selectRaw("
+                    output_defects.id,
+                    output_defects.kode_numbering,
+                    output_defects.so_det_id,
+                    output_defect_types.defect_type,
+                    act_costing.kpno ws,
+                    act_costing.styleno style,
+                    so_det.color,
+                    so_det.size,
+                    userpassword.username,
+                    output_defect_in_out.id defect_in_id,
+                    'qc' output_type
+                ")->
+                leftJoin("user_sb_wip", "user_sb_wip.id", "=", "output_defects.created_by")->
+                leftJoin("userpassword", "userpassword.line_id", "=", "user_sb_wip.line_id")->
+                leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
+                leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
+                leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
+                leftJoin("output_defect_types", "output_defect_types.id", "=", "output_defects.defect_type_id")->
+                leftJoin("output_defect_in_out", function ($join) {
+                    $join->on("output_defect_in_out.id", "=", "output_defects.id");
+                    $join->on("output_defect_in_out.output_type", "=", DB::raw("'qc'"));
+                })->
+                whereNotNull("output_defects.id")->
+                where("output_defects.defect_status", "defect")->
+                where("output_defect_types.allocation", Auth::user()->Groupp)->
+                where("output_defects.kode_numbering", $request->scannedDefectIn)->
+                first();
+            }
+
+            if ($scannedDefect) {
+                $defectInOut = DefectInOut::where("defect_id", $scannedDefect->id)->where("output_type", $scannedDefect->output_type)->first();
+
+                if (!$defectInOut) {
+                    $createDefectInOut = DefectInOut::create([
+                        "defect_id" => $scannedDefect->id,
+                        "kode_numbering" => $scannedDefect->kode_numbering,
+                        "status" => "defect",
+                        "type" => Auth::user()->Groupp,
+                        "output_type" => $scannedDefect->output_type,
+                        "created_by" => Auth::user()->id,
+                        "created_at" => Carbon::now(),
+                        "updated_at" => Carbon::now(),
+                        "reworked_at" => null
+                    ]);
+
+                    if ($createDefectInOut) {
+
+                        $status = "success";
+                        $message = "DEFECT '".$scannedDefect->defect_type."' dengan KODE '".$request->scannedDefectIn."' berhasil masuk ke '".Auth::user()->Groupp."'";
+                    } else {
+                        $status = "error";
+                        $message = "Terjadi Kesalahan.";
+                    }
+                } else {
+                    $status = "warning";
+                    $message = "QR sudah discan.";
+                }
+            } else {
+                $status = "error";
+                $message = "Defect dengan QR '".$request->scannedDefectIn."' tidak ditemukan di '".Auth::user()->Groupp."'";
+            }
+        } else {
+            $status = "error";
+            $message = "QR tidak sesuai";
+        }
+
+        return array(
+            "status" => $status,
+            "message" => $message
+        );
     }
 
     public function exportDefectInOut(Request $request) {

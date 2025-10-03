@@ -1,5 +1,14 @@
 @extends('layouts.index')
 
+@section('custom-link')
+    <style>
+        div.dataTables_wrapper div.dataTables_processing {
+            top: 5%;
+            left: 5%;
+        }
+    </style>
+@endsection
+
 @section('content')
     @livewire('defect-in-out')
 @endsection

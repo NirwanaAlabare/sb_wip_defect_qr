@@ -520,6 +520,7 @@ class DefectInOut extends Component
 
         $this->lines = UserPassword::where("Groupp", "SEWING")->orderBy("line_id", "asc")->get();
 
+<<<<<<< Updated upstream
         if ($this->defectInOutputType == 'all') {
             // Defect Packing
             $defectInPackingQuery = DefectPacking::selectRaw("
@@ -891,6 +892,8 @@ class DefectInOut extends Component
             orderBy("output_type")->
             get();
 
+=======
+>>>>>>> Stashed changes
         if ($this->defectOutOutputType == "all" ) {
             $defectOutQuery = DefectInOutModel::selectRaw("
                 (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.id ELSE master_plan.id END) END) master_plan_id,
@@ -1046,11 +1049,11 @@ class DefectInOut extends Component
             groupByRaw("DATE(output_defect_in_out.created_at)")->
             get();
 
-        $defectInOutTotal = $defectInOutDaily->sum("total_in");
+        $defectInOutTotal = $defectInOutDaily ? $defectInOutDaily->sum("total_in") : 0;
 
         return view('livewire.defect-in-out', [
-            "totalDefectIn" => $this->defectInList->sum("defect_qty"),
-            "totalDefectOut" => $this->defectOutList->sum("defect_qty"),
+            "totalDefectIn" => $this->defectInList ? $this->defectInList->sum("defect_qty") : 0,
+            "totalDefectOut" => $this->defectOutList ? $this->defectOutList->sum("defect_qty") : 0,
             "totalDefectInOut" => $defectInOutTotal
         ]);
     }

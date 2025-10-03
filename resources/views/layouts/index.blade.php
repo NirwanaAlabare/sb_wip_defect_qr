@@ -15,6 +15,13 @@
     <script defer src="{{ asset('alpinejs/dist/cdn.min.js') }}"></script>
 </head>
 <body>
+    <!-- Loading -->
+    <div class="loading-container-fullscreen d-none" id="loading">
+        <div class="loading-container">
+            <div class="loading"></div>
+        </div>
+    </div>
+
     @php
         $thisOrderDate = "";
         if (isset($orderDate) && $orderDate) {

@@ -37,9 +37,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/get-size', 'getSize')->name("get-size");
         Route::get('/get-defect-type', 'getDefectType')->name("get-defect-type");
         Route::get('/get-defect-area', 'getDefectArea')->name("get-defect-area");
+
+        Route::get('/get-defect-in-list', 'getDefectInList')->name("get-defect-in-list");
+
         Route::get('/get-defect-in-out-daily', 'getDefectInOutDaily')->name("get-defect-in-out-daily");
         Route::get('/get-defect-in-out-detail', 'getDefectInOutDetail')->name("get-defect-in-out-detail");
         Route::get('/get-defect-in-out-detail-total', 'getDefectInOutDetailTotal')->name("get-defect-in-out-detail-total");
+
+        Route::post('/submit-defect-in', 'submitDefectIn')->name("submit-defect-in");
 
         Route::post('/export-defect-in-out', 'exportDefectInOut')->name("export-defect-in-out");
     });

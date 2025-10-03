@@ -38,10 +38,10 @@
                         <div class="col-md-8">
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4">
-                                    <input type="text" class="form-control form-control-sm" wire:model="defectInSearch" placeholder="Search...">
+                                    <input type="text" class="form-control form-control-sm" id="defect-in-search" wire:ignore placeholder="Search..." onkeyup="reloadDefectInListTable()">
                                 </div>
                                 <div class="col-md-4">
-                                    <select class="form-select form-select-sm" name="defectInOutputType" id="defect-in-output-type" wire:model="defectInOutputType">
+                                    <select class="form-select form-select-sm" name="defectInOutputType" id="defect-in-output-type" wire:ignore onchange="reloadDefectInListTable()">
                                         <option value="all">ALL</option>
                                         <option value="qc">QC</option>
                                         {{-- <option value="qcf">QC FINISHING</option> --}}
@@ -49,7 +49,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <select class="form-select form-select-sm" name="defectInLine" id="defect-in-line" wire:model="defectInLine">
+                                    <select class="form-select form-select-sm" name="defectInLine" id="defect-in-line" wire:ignore onchange="reloadDefectInListTable()">
                                         <option value="" selected>Pilih Line</option>
                                         @foreach ($lines as $line)
                                             <option value="{{ $line->username }}">{{ str_replace("_", " ", $line->username) }}</option>
@@ -60,8 +60,8 @@
                                     <button type="button" class="btn btn-sm btn-rework w-100 fw-bold" wire:click="saveAllDefectIn">ALL DEFECT OUT</button>
                                 </div>
                             </div>
-                            <div class="table-responsive-md" style="max-height: 400px; overflow-y: auto;">
-                                <table class="table table-sm table-bordered w-100">
+                            <div class="table-responsive-md" style="max-height: 400px; overflow-y: auto;" wire:ignore>
+                                <table class="table table-sm table-bordered w-100" id="defect-in-list-table">
                                     <thead>
                                         <tr class="text-center align-middle">
                                             <th>No.</th>
@@ -77,6 +77,7 @@
                                             {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-in-select-all" onclick="defectInSelectAll(this)" style="scale: 1.3"></th>
                                             <th>IN</th> --}}
                                         </tr>
+<<<<<<< Updated upstream
                                     </thead>
                                     <tbody>
                                         @if (count($defectInList) < 1)
@@ -112,6 +113,43 @@
                                         @endif
                                     </tbody>
                                 </table>
+=======
+                                        <tr class="text-center align-middle">
+                                            <td>
+
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" id="defectInFilterKode" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" id="defectInFilterWaktu" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" id="defectInFilterLine" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" id="defectInFilterMasterPlan" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" id="defectInFilterSize" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" id="defectInFilterType" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+
+                                            </td>
+                                            <td>
+
+                                            </td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+
+                                {{-- {{ $defectInList->links() }} --}}
+>>>>>>> Stashed changes
                                 {{-- <div class="row justify-content-end mt-3">
                                     <div class="col-md-3">
                                         <button class="btn btn-defect btn-sm fw-bold w-100" wire:click='saveCheckedDefectIn()'>CHECKED DEFECT IN</button>
@@ -680,6 +718,157 @@
             })
         });
 
+<<<<<<< Updated upstream
+=======
+        // Defect In List
+        let defectInListTable = $("#defect-in-list-table").DataTable({
+            serverSide: true,
+            processing: true,
+            ordering: false,
+            searching: false,
+            paging: false,
+            ajax: {
+                url: '{{ route('get-defect-in-list') }}',
+                dataType: 'json',
+                data: function (d) {
+                    d.defectInOutputType = $("#defect-in-output-type").val();
+                    d.defectInSearch = $("#defect-in-search").val();
+                    d.defectInLine = $("#defect-in-line").val();
+                    d.defectInFilterKode = $("#defectInFilterKode").val();
+                    d.defectInFilterWaktu = $("#defectInFilterWaktu").val();
+                    d.defectInFilterLine = $("#defectInFilterLine").val();
+                    d.defectInFilterMasterPlan = $("#defectInFilterMasterPlan").val();
+                    d.defectInFilterSize = $("#defectInFilterSize").val();
+                    d.defectInFilterType = $("#defectInFilterType").val();
+                }
+            },
+            columns: [
+                {
+                    data: null,
+                },
+                {
+                    data: 'kode_numbering',
+                },
+                {
+                    data: 'defect_time',
+                },
+                {
+                    data: 'sewing_line',
+                },
+                {
+                    data: 'ws',
+                },
+                {
+                    data: 'size',
+                },
+                {
+                    data: 'defect_type',
+                },
+                {
+                    data: 'defect_qty',
+                },
+                {
+                    data: 'output_type',
+                },
+            ],
+            columnDefs: [
+                // {
+                //     targets: [0],
+                //     className: "text-nowrap text-center align-middle",
+                //     render: (data, type, row, meta) => {
+                //         return meta.row+1;
+                //     }
+                // },
+                {
+                    targets: [4],
+                    className: "text-nowrap text-center align-middle",
+                    render: (data, type, row, meta) => {
+                        return row.ws+"<br>"+row.style+"<br>"+row.color;
+                    }
+                },
+                {
+                    targets: [8],
+                    className: "text-nowrap text-center align-middle",
+                    render: (data, type, row, meta) => {
+                        let textColor = "";
+                        if (data == "packing") {
+                            textColor = "text-success";
+                        } else {
+                            textColor = "text-danger";
+                        }
+                        return "<span class='fw-bold "+textColor+"'>"+(data && data == "packing" ? "finishing" : data).toUpperCase()+"</span>";
+                    }
+                },
+                {
+                    targets: "_all",
+                    className: "text-nowrap text-center align-middle"
+                },
+            ],
+            rowCallback: function(row, data, iDisplayIndex) {
+                var info = this.api().page.info();
+                var page = info.page;
+                var length = info.length;
+                var index = (page * length + (iDisplayIndex + 1));
+                $('td:eq(0)', row).html(index); // Assuming the first column is for the index
+            }
+        });
+
+        function reloadDefectInListTable() {
+            $("#defect-in-list-table").DataTable().ajax.reload();
+        }
+
+        var scannedItemDefectIn = document.getElementById("scannedItemDefectIn");
+        scannedItemDefectIn.addEventListener("change", async function () {
+            @this.scannedDefectIn = this.value;
+
+            // submit
+            // @this.submitDefectIn();
+            submitDefectIn();
+
+            this.value = '';
+        });
+
+        function submitDefectIn() {
+            document.getElementById("loading").classList.remove("d-none");
+
+            $.ajax({
+                type: "post",
+                url: "{{ route('submit-defect-in') }}",
+                data: {
+                    scannedDefectIn: $("#scannedItemDefectIn").val(),
+                    defectInOutputType: $("#defect-in-output-type").val(),
+                },
+                dataType: "json",
+                success: function (response) {
+                    document.getElementById("loading").classList.add("d-none");
+
+                    $("#scannedItemDefectIn").focus();
+
+                    if (response) {
+                        showNotification(response.status, response.message);
+
+                        reloadDefectInListTable();
+                    }
+                },
+                error: function (jqXHR) {
+                    document.getElementById("loading").classList.add("d-none");
+
+                    console.error(jqXHR);
+                }
+            });
+        }
+
+        var scannedItemDefectOut = document.getElementById("scannedItemDefectOut");
+        scannedItemDefectOut.addEventListener("change", async function () {
+            @this.scannedDefectOut = this.value;
+
+            // submit
+            @this.submitDefectOut();
+
+            this.value = '';
+        });
+
+>>>>>>> Stashed changes
         // init scan
         Livewire.on('qrInputFocus', async (mode) => {
             console.log(mode);
