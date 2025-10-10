@@ -136,7 +136,7 @@
                                                 @endphp
                                                 <tr class="text-center align-middle">
                                                     <td>{{ $loop->index+1 }}</td>
-                                                    <td>{{ $defectIn->kode_numbering }}</td>
+                                                    <td disabled>{{ $defectIn->kode_numbering }}</td>
                                                     <td>{{ $defectIn->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectIn->sewing_line)) }}</td>
                                                     <td>{{ $defectIn->ws }}<br>{{ $defectIn->style }}<br>{{ $defectIn->color }}</td>
@@ -285,7 +285,7 @@
                                                 @endphp
                                                 <tr class="text-center align-middle">
                                                     <td>{{ $loop->index+1 }}</td>
-                                                    <td>{{ $defectOut->kode_numbering }}</td>
+                                                    <td disabled>{{ $defectOut->kode_numbering }}</td>
                                                     <td>{{ $defectOut->defect_time }}</td>
                                                     <td>{{ strtoupper(str_replace("_", " ", $defectOut->sewing_line)) }}</td>
                                                     <td>{{ $defectOut->ws }}<br>{{ $defectOut->style }}<br>{{ $defectOut->color }}</td>
@@ -1144,6 +1144,10 @@
 
                         return `<span class="`+textColor+` fw-bold">`+(data ? (data == "packing" ? "FINISHING" : data.toUpperCase()) : '-')+`</span>`;
                     }
+                },
+                {
+                    targets: [4],
+                    className: "disabled"
                 },
                 {
                     targets: [11],
