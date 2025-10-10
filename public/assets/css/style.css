@@ -643,6 +643,30 @@ input[type=number] {
     filter: invert(1);
 }
 
+td {
+    position: relative;
+}
+
+td[disabled]::after {
+    cursor: not-allowed;
+    position: absolute;
+    content: '';
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+td.disabled::after {
+    cursor: not-allowed;
+    position: absolute;
+    content: '';
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
 @media (max-width:768px) {
     .login-card.card {
         max-width: 90vw;
