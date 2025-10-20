@@ -598,7 +598,7 @@ class DefectInOut extends Component
             where("output_defects_packing.defect_status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             whereNull("output_defect_in_out.id")->
-            whereRaw("YEAR(output_defects_packing.updated_at) = '".date("Y")."'");
+            whereRaw("DATE(output_defects_packing.updated_at) >= '2025-10-01'");
             if ($this->defectInSearch) {
                 $defectInPackingQuery->whereRaw("(
                     master_plan.tgl_plan LIKE '%".$this->defectInSearch."%' OR
@@ -658,7 +658,7 @@ class DefectInOut extends Component
             where("output_check_finishing.status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             whereNull("output_defect_in_out.id")->
-            whereRaw("YEAR(output_check_finishing.updated_at) = '".date("Y")."'");
+            whereRaw("DATE(output_check_finishing.updated_at) >= '2025-10-01'");
             if ($this->defectInSearch) {
                 $defectInQcfQuery->whereRaw("(
                     master_plan.tgl_plan LIKE '%".$this->defectInSearch."%' OR
@@ -717,7 +717,7 @@ class DefectInOut extends Component
             where("output_defects.defect_status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             whereNull("output_defect_in_out.id")->
-            whereRaw("YEAR(output_defects.updated_at) = '".date("Y")."'");
+            whereRaw("DATE(output_defects.updated_at) >= '2025-10-01'");
             if ($this->defectInSearch) {
                 $defectInQcQuery->whereRaw("(
                     master_plan.tgl_plan LIKE '%".$this->defectInSearch."%' OR
@@ -806,7 +806,7 @@ class DefectInOut extends Component
             where("output_defects_packing.defect_status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             whereNull("output_defect_in_out.id")->
-            whereRaw("YEAR(output_defects_packing.updated_at) = '".date("Y")."'");
+            whereRaw("DATE(output_defects_packing.updated_at) >= '2025-10-01'");
             if ($this->defectInSearch) {
                 $defectInQuery->whereRaw("(
                     master_plan.tgl_plan LIKE '%".$this->defectInSearch."%' OR
@@ -887,7 +887,7 @@ class DefectInOut extends Component
             where("output_check_finishing.status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             whereNull("output_defect_in_out.id")->
-            whereRaw("YEAR(output_check_finishing.updated_at) = '".date("Y")."'");
+            whereRaw("DATE(output_check_finishing.updated_at) >= '2025-10-01'");
             if ($this->defectInSearch) {
                 $defectInQuery->whereRaw("(
                     master_plan.tgl_plan LIKE '%".$this->defectInSearch."%' OR
@@ -968,7 +968,7 @@ class DefectInOut extends Component
             where("output_defects.defect_status", "defect")->
             where("output_defect_types.allocation", Auth::user()->Groupp)->
             whereNull("output_defect_in_out.id")->
-            whereRaw("YEAR(output_defects.updated_at) = '".date("Y")."'");
+            whereRaw("DATE(output_defects.updated_at) >= '2025-10-01'");
             if ($this->defectInSearch) {
                 $defectInQuery->whereRaw("(
                     master_plan.tgl_plan LIKE '%".$this->defectInSearch."%' OR
@@ -1082,7 +1082,7 @@ class DefectInOut extends Component
             whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.allocation ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.allocation ELSE output_defect_types.allocation END) END) = '".Auth::user()->Groupp."' ")->
             where("output_defect_in_out.status", "defect")->
             where("output_defect_in_out.type", Auth::user()->Groupp)->
-            whereRaw("YEAR(output_defect_in_out.created_at) = '".date("Y")."'");
+            whereRaw("DATE(output_defect_in_out.created_at) >= '2025-10-01'");
             if ($this->defectOutSearch) {
                 $defectOutQuery->whereRaw("(
                     (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.tgl_plan ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.tgl_plan ELSE master_plan.tgl_plan END) END) LIKE '%".$this->defectOutSearch."%' OR
@@ -1159,7 +1159,7 @@ class DefectInOut extends Component
             where("output_defect_in_out.status", "defect")->
             where("output_defect_in_out.output_type", $this->defectOutOutputType)->
             where("output_defect_in_out.type", Auth::user()->Groupp)->
-            whereRaw("YEAR(output_defect_in_out.created_at) = '".date("Y")."'");
+            whereRaw("DATE(output_defect_in_out.created_at) >= '2025-10-01'");
             if ($this->defectOutSearch) {
                 $defectOutQuery->whereRaw("(
                     master_plan.tgl_plan LIKE '%".$this->defectOutSearch."%' OR
