@@ -41,6 +41,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/get-defect-in-out-detail', 'getDefectInOutDetail')->name("get-defect-in-out-detail");
         Route::get('/get-defect-in-out-detail-total', 'getDefectInOutDetailTotal')->name("get-defect-in-out-detail-total");
 
+        Route::get('/get-defect-in-list', 'getDefectInList')->name("get-defect-in-list");
+        Route::get('/get-defect-out-list', 'getDefectOutList')->name("get-defect-out-list");
+
+        Route::post('/submit-defect-in', 'submitDefectIn')->name("submit-defect-in");
+        Route::post('/submit-defect-out', 'submitDefectOut')->name("submit-defect-out");
+
         Route::post('/export-defect-in-out', 'exportDefectInOut')->name("export-defect-in-out");
     });
 

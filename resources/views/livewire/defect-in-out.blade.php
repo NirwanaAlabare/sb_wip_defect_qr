@@ -1,5 +1,5 @@
 <div>
-    <div class="loading-container-fullscreen" wire:loading wire:target="changeMode, preSaveSelectedDefectIn, saveSelectedDefectIn, saveCheckedDefectIn, saveAllDefectIn, preSaveSelectedDefectOut, saveSelectedDefectOut, saveCheckedDefectOut, saveAllDefectOut, submitDefectIn, submitDefectOut, submitDefectOut, defectInOutputType, defectInLine, defectOutOutputType, defectOutLine, refreshComponent, showDefectAreaImage">
+    <div class="loading-container-fullscreen" wire:loading wire:target="changeMode, preSaveSelectedDefectIn, saveSelectedDefectIn, saveCheckedDefectIn, saveAllDefectIn, preSaveSelectedDefectOut, saveSelectedDefectOut, saveCheckedDefectOut, saveAllDefectOut, submitDefectIn, submitDefectOut, defectInOutputType, defectInLine, defectOutOutputType, defectOutLine, refreshComponent, showDefectAreaImage">
         <div class="loading-container">
             <div class="loading"></div>
         </div>
@@ -22,7 +22,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title text-light text-center fw-bold">{{ Auth::user()->Groupp." " }}DEFECT IN</h5>
                         <div class="d-flex align-items-center">
-                            <h5 class="px-3 mb-0 text-light">Total : <b>{{ $totalDefectIn }}</b></h5>
+                            <h5 class="px-3 mb-0 text-light" id="total-defect-in" wire:ignore>Total : <b>{{ 0 }}</b></h5>
                             <button class="btn btn-dark float-end" wire:click="refreshComponent()">
                                 <i class="fa-solid fa-rotate"></i>
                             </button>
@@ -38,10 +38,10 @@
                         <div class="col-md-8">
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4">
-                                    <input type="text" class="form-control form-control-sm" wire:model="defectInSearch" placeholder="Search...">
+                                    <input type="text" class="form-control form-control-sm" id="defect-in-search" wire:ignore placeholder="Search..." onkeyup="reloadDefectInListTable()">
                                 </div>
                                 <div class="col-md-4">
-                                    <select class="form-select form-select-sm" name="defectInOutputType" id="defect-in-output-type" wire:model="defectInOutputType">
+                                    <select class="form-select form-select-sm" name="defectInOutputType" id="defect-in-output-type" wire:ignore onchange="reloadDefectInListTable()"">
                                         <option value="all">ALL</option>
                                         <option value="qc">QC</option>
                                         {{-- <option value="qcf">QC FINISHING</option> --}}
@@ -49,7 +49,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <select class="form-select form-select-sm" name="defectInLine" id="defect-in-line" wire:model="defectInLine">
+                                    <select class="form-select form-select-sm" name="defectInLine" id="defect-in-line" wire:ignore onchange="reloadDefectInListTable()"">
                                         <option value="" selected>Pilih Line</option>
                                         @foreach ($lines as $line)
                                             <option value="{{ $line->username }}">{{ str_replace("_", " ", $line->username) }}</option>
@@ -60,8 +60,8 @@
                                     <button type="button" class="btn btn-sm btn-rework w-100 fw-bold" wire:click="saveAllDefectIn">ALL DEFECT OUT</button>
                                 </div>
                             </div>
-                            <div class="table-responsive-md" style="max-height: 400px; overflow-y: auto;">
-                                <table class="table table-sm table-bordered w-100">
+                            <div class="table-responsive-md" style="max-height: 400px; overflow-y: auto;" wire:ignore>
+                                <table class="table table-sm table-bordered w-100" id="defect-in-list-table">
                                     <thead>
                                         <tr class="text-center align-middle">
                                             <th>No.</th>
@@ -74,47 +74,56 @@
                                             <th>Qty</th>
                                             <th>Dept.</th>
                                             {{-- <th>Waktu</th> --}}
-                                            {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-in-select-all" onclick="defectInSelectAll(this)" style="scale: 1.3"></th>
+                                            {{-- <th><input class="form-check-input" type="checkbox" value=""
+                                                    id="defect-in-select-all" onclick="defectInSelectAll(this)"
+                                                    style="scale: 1.3"></th>
                                             <th>IN</th> --}}
+                                        </tr>
+                                        <tr class="text-center align-middle">
+                                            <td>
+
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="defectInFilterKode" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="defectInFilterWaktu" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="defectInFilterLine" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="defectInFilterMasterPlan" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="defectInFilterSize" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="defectInFilterType" onkeyup="reloadDefectInListTable()">
+                                            </td>
+                                            <td>
+
+                                            </td>
+                                            <td>
+
+                                            </td>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @if (count($defectInList) < 1)
-                                            <tr class="text-center align-middle">
-                                                <td colspan="9" class="text-center">Data tidak ditemukan</td>
-                                            </tr>
-                                        @else
-                                            @foreach ($defectInList as $defectIn)
-                                                @php
-                                                    $thisDefectInChecked = null;
-
-                                                    if ($defectInSelectedList) {
-                                                        $thisDefectInChecked = $defectInSelectedList->filter(function ($item) use ($defectIn) {
-                                                            return $item['master_plan_id'] == $defectIn->master_plan_id && $item['defect_type_id'] == $defectIn->defect_type_id && $item['so_det_id'] == $defectIn->so_det_id;
-                                                        });
-                                                    }
-                                                @endphp
-                                                <tr class="text-center align-middle">
-                                                    <td>{{ 1+$loop->index }}</td>
-                                                    <td>{{ $defectIn->kode_numbering }}</td>
-                                                    <td>{{ $defectIn->defect_time }}</td>
-                                                    <td>{{ strtoupper(str_replace("_", " ", $defectIn->sewing_line)) }}</td>
-                                                    <td>{{ $defectIn->ws }}<br>{{ $defectIn->style }}<br>{{ $defectIn->color }}</td>
-                                                    <td>{{ $defectIn->size }}</td>
-                                                    <td>{{ $defectIn->defect_type }}</td>
-                                                    <td>{{ $defectIn->defect_qty }}</td>
-                                                    <td class="fw-bold {{ $defectIn->output_type == "qc" ? "text-danger" : ($defectIn->output_type == "qcf" ? "text-pink" : "text-success") }}">{{ ($defectIn->output_type == "packing" ? "FINISHING" : strtoupper($defectIn->output_type)) }}</td>
-                                                    {{-- <td>{{ $defectIn->updated_at }}</td> --}}
-                                                    {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}" style="scale: 1.3" {{ $thisDefectInChecked && $thisDefectInChecked->count() > 0 ? "checked" : ""  }} onchange="defectInCheck(this)"></td>
-                                                    <td><button class="btn btn-sm btn-defect fw-bold" wire:click='preSaveSelectedDefectIn("{{ $defectIn->master_plan_id.'-'.$defectIn->defect_type_id.'-'.$defectIn->so_det_id }}")'>IN</button></td> --}}
-                                                </tr>
-                                            @endforeach
-                                        @endif
                                     </tbody>
                                 </table>
+
+                                {{-- {{ $defectInList->links() }} --}}
                                 {{-- <div class="row justify-content-end mt-3">
                                     <div class="col-md-3">
-                                        <button class="btn btn-defect btn-sm fw-bold w-100" wire:click='saveCheckedDefectIn()'>CHECKED DEFECT IN</button>
+                                        <button class="btn btn-defect btn-sm fw-bold w-100"
+                                            wire:click='saveCheckedDefectIn()'>CHECKED DEFECT IN</button>
                                     </div>
                                 </div> --}}
                             </div>
@@ -131,7 +140,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title text-light text-center fw-bold">{{ Auth::user()->Groupp." " }}DEFECT OUT</h5>
                         <div class="d-flex align-items-center">
-                            <h5 class="px-3 mb-0 text-light">Total : <b>{{ $totalDefectOut }}</b></h5>
+                            <h5 class="px-3 mb-0 text-light" id="total-defect-out" wire:ignore>Total : <b>0</b></h5>
                             <button class="btn btn-dark float-end" wire:click="refreshComponent()">
                                 <i class="fa-solid fa-rotate"></i>
                             </button>
@@ -147,10 +156,10 @@
                         <div class="col-md-8">
                             <div class="row mb-3">
                                 <div class="col-md-4">
-                                    <input type="text" class="form-control form-control-sm" wire:model="defectOutSearch" placeholder="Search...">
+                                    <input type="text" class="form-control form-control-sm" id="defect-out-search" wire:ignore placeholder="Search..." onchange="reloadDefectInListTable()">
                                 </div>
                                 <div class="col-md-4">
-                                    <select class="form-select form-select-sm" name="defectOutOutputType" id="defect-out-output-type" wire:model="defectOutOutputType">
+                                    <select class="form-select form-select-sm" name="defectOutOutputType" id="defect-out-output-type" wire:ignore onchange="reloadDefectInListTable()">
                                         <option value="all">ALL</option>
                                         <option value="qc">QC</option>
                                         {{-- <option value="qcf">QC Finishing</option> --}}
@@ -158,7 +167,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <select class="form-select form-select-sm" name="defectOutLine" id="defect-out-line" wire:model="defectOutLine">
+                                    <select class="form-select form-select-sm" name="defectOutLine" id="defect-out-line" wire:ignore onchange="reloadDefectInListTable()">
                                         <option value="" selected>Pilih Line</option>
                                         @foreach ($lines as $line)
                                             <option value="{{ $line->username }}">{{ str_replace("_", " ", $line->username) }}</option>
@@ -169,8 +178,8 @@
                                     <button type="button" class="btn btn-sm btn-rework w-100 fw-bold" wire:click="saveAllDefectOut">ALL DEFECT OUT</button>
                                 </div>
                             </div>
-                            <div class="table-responsive-md" style="max-height: 400px; overflow-y: auto;">
-                                <table class="table table-sm table-bordered w-100">
+                            <div class="table-responsive-md" style="max-height: 400px; overflow-y: auto;" wire:ignore>
+                                <table class="table table-sm table-bordered w-100" id="defect-out-list-table">
                                     <thead>
                                         <tr class="text-center align-middle">
                                             <th>No.</th>
@@ -183,48 +192,55 @@
                                             <th>Qty</th>
                                             <th>Dept.</th>
                                             {{-- <th>Waktu</th> --}}
-                                            {{-- <th><input class="form-check-input" type="checkbox" value="" id="defect-out-select-all" onchange="defectOutSelectAll(this)" style="scale: 1.3"></th>
+                                            {{-- <th><input class="form-check-input" type="checkbox" value=""
+                                                    id="defect-out-select-all" onchange="defectOutSelectAll(this)"
+                                                    style="scale: 1.3"></th>
                                             <th>IN</th> --}}
+                                        </tr>
+                                        <tr class="text-center align-middle">
+                                            <td>
+
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" id="defectOutFilterKode"
+                                                    onkeyup="reloadDefectOutListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" id="defectOutFilterWaktu"
+                                                    onkeyup="reloadDefectOutListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" id="defectOutFilterLine"
+                                                    onkeyup="reloadDefectOutListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" id="defectOutFilterMasterPlan"
+                                                    onkeyup="reloadDefectOutListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" id="defectOutFilterSize"
+                                                    onkeyup="reloadDefectOutListTable()">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" id="defectOutFilterType"
+                                                    onkeyup="reloadDefectOutListTable()">
+                                            </td>
+                                            <td>
+
+                                            </td>
+                                            <td>
+
+                                            </td>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @if (count($defectOutList) < 1)
-                                            <tr class="text-center align-middle">
-                                                <td colspan="9" class="text-center">Data tidak ditemukan</td>
-                                            </tr>
-                                        @else
-                                            @foreach ($defectOutList as $defectOut)
-                                                @php
-                                                    $thisDefectOutChecked = null;
-
-                                                    if ($defectOutSelectedList) {
-                                                        $thisDefectOutChecked = $defectOutSelectedList->filter(function ($item) use ($defectOut) {
-                                                            return $item['master_plan_id'] == $defectOut->master_plan_id && $item['defect_type_id'] == $defectOut->defect_type_id && $item['so_det_id'] == $defectOut->so_det_id;
-                                                        });
-                                                    }
-                                                @endphp
-                                                <tr class="text-center align-middle">
-                                                    <td>{{ 1 + $loop->index }}</td>
-                                                    <td>{{ $defectOut->kode_numbering }}</td>
-                                                    <td>{{ $defectOut->defect_time }}</td>
-                                                    <td>{{ strtoupper(str_replace("_", " ", $defectOut->sewing_line)) }}</td>
-                                                    <td>{{ $defectOut->ws }}<br>{{ $defectOut->style }}<br>{{ $defectOut->color }}</td>
-                                                    <td>{{ $defectOut->size }}</td>
-                                                    <td>{{ $defectOut->defect_type }}</td>
-                                                    <td>{{ $defectOut->defect_qty }}</td>
-                                                    <td class="fw-bold {{ $defectOut->output_type == "qc" ? "text-danger" : ($defectOut->output_type == "qcf" ? "text-pink" : "text-success") }}">{{ ($defectOut->output_type == "packing" ? "FINISHING" : strtoupper($defectOut->output_type)) }}</td>
-                                                    {{-- <td>{{ $defectOut->updated_at }}</td> --}}
-                                                    {{-- <td><input class="form-check-input" type="checkbox" value="{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}" style="scale: 1.3" {{ $thisDefectOutChecked && $thisDefectOutChecked->count() > 0 ? "checked" : ""  }} onchange="defectOutCheck(this)"></td>
-                                                    <td><button class="btn btn-sm btn-rework fw-bold" wire:click="preSaveSelectedDefectOut('{{ $defectOut->master_plan_id.'-'.$defectOut->defect_type_id.'-'.$defectOut->so_det_id }}')">OUT</button></td> --}}
-                                                </tr>
-                                            @endforeach
-                                        @endif
                                     </tbody>
                                 </table>
                                 {{-- {{ $defectOutList->links() }} --}}
                                 {{-- <div class="row justify-content-end mt-3">
                                     <div class="col-md-3">
-                                        <button class="btn btn-rework btn-sm fw-bold w-100" wire:click='saveCheckedDefectOut()'>CHECKED DEFECT OUT</button>
+                                        <button class="btn btn-rework btn-sm fw-bold w-100"
+                                            wire:click='saveCheckedDefectOut()'>CHECKED DEFECT OUT</button>
                                     </div>
                                 </div> --}}
                             </div>
@@ -524,7 +540,8 @@
                 @this.scannedDefectIn = decodedText;
 
                 // submit
-                await @this.submitDefectIn();
+                // await @this.submitDefectIn();
+                submitDefectIn(decodedText);
             }
 
             document.getElementById('button-out').disabled = true;
@@ -680,6 +697,327 @@
             })
         });
 
+        async function refreshScan(mode) {
+            async function defectInOnScanSuccess(decodedText, decodedResult) {
+                // handle the scanned code as you like, for example:
+                await clearDefectInScan();
+
+                // set kode_numbering
+                @this.scannedDefectIn = decodedText;
+
+                // submit
+                // await @this.submitDefectIn();
+                submitDefectIn(decodedText);
+            }
+
+            async function defectOutOnScanSuccess(decodedText, decodedResult) {
+                // handle the scanned code as you like, for example:
+                await clearDefectOutScan();
+
+                // set kode_numbering
+                @this.scannedDefectOut = decodedText;
+
+                // submit
+                // await @this.submitDefectOut();
+                submitDefectOut(decodedText);
+
+            }
+
+            if (mode == "in") {
+                // await clearDefectOutScan();
+                document.getElementById('button-out').disabled = true;
+                await refreshDefectInScan(defectInOnScanSuccess);
+                document.getElementById('button-out').disabled = false;
+
+                reloadDefectInListTable();
+            } else if (mode == "out") {
+                // await clearDefectInScan();
+                document.getElementById('button-out').disabled = true;
+                await refreshDefectOutScan(defectOutOnScanSuccess);
+                document.getElementById('button-out').disabled = false;
+
+                reloadDefectOutListTable();
+            }
+        }
+
+        // Defect In List
+        let defectInListTable = $("#defect-in-list-table").DataTable({
+            serverSide: true,
+            processing: true,
+            ordering: false,
+            searching: false,
+            paging: true,
+            ajax: {
+                url: '{{ route('get-defect-in-list') }}',
+                dataType: 'json',
+                data: function (d) {
+                    d.defectInOutputType = $("#defect-in-output-type").val();
+                    d.defectInSearch = $("#defect-in-search").val();
+                    d.defectInLine = $("#defect-in-line").val();
+                    d.defectInFilterKode = $("#defectInFilterKode").val();
+                    d.defectInFilterWaktu = $("#defectInFilterWaktu").val();
+                    d.defectInFilterLine = $("#defectInFilterLine").val();
+                    d.defectInFilterMasterPlan = $("#defectInFilterMasterPlan").val();
+                    d.defectInFilterSize = $("#defectInFilterSize").val();
+                    d.defectInFilterType = $("#defectInFilterType").val();
+                }
+            },
+            columns: [
+                {
+                    data: null,
+                },
+                {
+                    data: 'kode_numbering',
+                },
+                {
+                    data: 'defect_time',
+                },
+                {
+                    data: 'sewing_line',
+                },
+                {
+                    data: 'ws',
+                },
+                {
+                    data: 'size',
+                },
+                {
+                    data: 'defect_type',
+                },
+                {
+                    data: 'defect_qty',
+                },
+                {
+                    data: 'output_type',
+                },
+            ],
+            columnDefs: [
+                // {
+                //     targets: [0],
+                //     className: "text-nowrap text-center align-middle",
+                //     render: (data, type, row, meta) => {
+                //         return meta.row+1;
+                //     }
+                // },
+                {
+                    targets: [4],
+                    className: "text-nowrap text-center align-middle",
+                    render: (data, type, row, meta) => {
+                        return row.ws + "<br>" + row.style + "<br>" + row.color;
+                    }
+                },
+                {
+                    targets: [8],
+                    className: "text-nowrap text-center align-middle",
+                    render: (data, type, row, meta) => {
+                        let textColor = "";
+                        if (data == "packing") {
+                            textColor = "text-success";
+                        } else {
+                            textColor = "text-danger";
+                        }
+                        return "<span class='fw-bold " + textColor + "'>" + (data && data == "packing" ? "finishing" : data).toUpperCase() + "</span>";
+                    }
+                },
+                {
+                    targets: "_all",
+                    className: "text-nowrap text-center align-middle"
+                },
+            ],
+            rowCallback: function (row, data, iDisplayIndex) {
+                var info = this.api().page.info();
+                var page = info.page;
+                var length = info.length;
+                var index = (page * length + (iDisplayIndex + 1));
+                $('td:eq(0)', row).html(index); // Assuming the first column is for the index
+            }
+        });
+
+        $("#defect-in-list-table").DataTable().on('draw.dt', function (e, settings, json, xhr) {
+            var info = $("#defect-in-list-table").DataTable().page.info();
+            var totalEntries = info.recordsDisplay;
+            $('#total-defect-in b').text(totalEntries);
+        });
+
+        function reloadDefectInListTable() {
+            $("#defect-in-list-table").DataTable().ajax.reload(() => {
+                var info = $("#defect-in-list-table").DataTable().page.info();
+                var totalEntries = info.recordsDisplay;
+                $('#total-defect-in b').text(totalEntries);
+            });
+        }
+
+        function submitDefectIn(kodeNumbering) {
+            document.getElementById("loading").classList.remove("d-none");
+
+            $.ajax({
+                type: "post",
+                url: "{{ route('submit-defect-in') }}",
+                data: {
+                    scannedDefectIn: kodeNumbering,
+                    defectInOutputType: $("#defect-in-output-type").val(),
+                },
+                dataType: "json",
+                success: function (response) {
+                    document.getElementById("loading").classList.add("d-none");
+
+                    refreshScan("in");
+
+                    if (response) {
+                        showNotification(response.status, response.message);
+
+                        reloadDefectInListTable();
+                    }
+                },
+                error: function (jqXHR) {
+                    document.getElementById("loading").classList.add("d-none");
+
+                    refreshScan("in");
+
+                    console.error(jqXHR);
+                }
+            });
+        }
+
+        // Defect Out List
+        let defectOutListTable = $("#defect-out-list-table").DataTable({
+            serverSide: true,
+            processing: true,
+            ordering: false,
+            searching: false,
+            paging: true,
+            ajax: {
+                url: '{{ route('get-defect-out-list') }}',
+                dataType: 'json',
+                data: function (d) {
+                    d.defectOutOutputType = $("#defect-out-output-type").val();
+                    d.defectOutSearch = $("#defect-out-search").val();
+                    d.defectOutLine = $("#defect-out-line").val();
+                    d.defectOutFilterKode = $("#defectOutFilterKode").val();
+                    d.defectOutFilterWaktu = $("#defectOutFilterWaktu").val();
+                    d.defectOutFilterLine = $("#defectOutFilterLine").val();
+                    d.defectOutFilterMasterPlan = $("#defectOutFilterMasterPlan").val();
+                    d.defectOutFilterSize = $("#defectOutFilterSize").val();
+                    d.defectOutFilterType = $("#defectOutFilterType").val();
+                }
+            },
+            columns: [
+                {
+                    data: null,
+                },
+                {
+                    data: 'kode_numbering',
+                },
+                {
+                    data: 'defect_time',
+                },
+                {
+                    data: 'sewing_line',
+                },
+                {
+                    data: 'ws',
+                },
+                {
+                    data: 'size',
+                },
+                {
+                    data: 'defect_type',
+                },
+                {
+                    data: 'defect_qty',
+                },
+                {
+                    data: 'output_type',
+                },
+            ],
+            columnDefs: [
+                // {
+                //     targets: [0],
+                //     className: "text-nowrap text-center align-middle",
+                //     render: (data, type, row, meta) => {
+                //         return meta.row+1;
+                //     }
+                // },
+                {
+                    targets: [4],
+                    className: "text-nowrap text-center align-middle",
+                    render: (data, type, row, meta) => {
+                        return row.ws + "<br>" + row.style + "<br>" + row.color;
+                    }
+                },
+                {
+                    targets: [8],
+                    className: "text-nowrap text-center align-middle",
+                    render: (data, type, row, meta) => {
+                        let textColor = "";
+                        if (data == "packing") {
+                            textColor = "text-success";
+                        } else {
+                            textColor = "text-danger";
+                        }
+                        return "<span class='fw-bold " + textColor + "'>" + (data && data == "packing" ? "finishing" : data).toUpperCase() + "</span>";
+                    }
+                },
+                {
+                    targets: "_all",
+                    className: "text-nowrap text-center align-middle"
+                },
+            ],
+            rowCallback: function (row, data, iDisplayIndex) {
+                var info = this.api().page.info();
+                var page = info.page;
+                var length = info.length;
+                var index = (page * length + (iDisplayIndex + 1));
+                $('td:eq(0)', row).html(index); // Assuming the first column is for the index
+            }
+        });
+
+        $("#defect-out-list-table").DataTable().on('draw.dt', function (e, settings, json, xhr) {
+            var info = $("#defect-out-list-table").DataTable().page.info();
+            var totalEntries = info.recordsDisplay;
+            $('#total-defect-out b').text(totalEntries);
+        });
+
+        function reloadDefectOutListTable() {
+            $("#defect-out-list-table").DataTable().ajax.reload(() => {
+                var info = $("#defect-out-list-table").DataTable().page.info();
+                var totalEntries = info.recordsDisplay;
+                $('#total-defect-out b').text(totalEntries);
+            });
+        }
+
+        function submitDefectOut(kodeNumbering) {
+            document.getElementById("loading").classList.remove("d-none");
+
+            $.ajax({
+                type: "post",
+                url: "{{ route('submit-defect-out') }}",
+                data: {
+                    scannedDefectOut: kodeNumbering,
+                    defectOutOutputType: $("#defect-out-output-type").val(),
+                },
+                dataType: "json",
+                success: function (response) {
+                    document.getElementById("loading").classList.add("d-none");
+
+                    refreshScan("out");
+
+                    if (response) {
+                        showNotification(response.status, response.message);
+
+                        reloadDefectOutListTable();
+                    }
+                },
+                error: function (jqXHR) {
+                    document.getElementById("loading").classList.add("d-none");
+
+                    refreshScan("out");
+
+                    console.error(jqXHR);
+                }
+            });
+        }
+
         // init scan
         Livewire.on('qrInputFocus', async (mode) => {
             console.log(mode);
@@ -692,8 +1030,8 @@
                 @this.scannedDefectIn = decodedText;
 
                 // submit
-                await @this.submitDefectIn();
-
+                // await @this.submitDefectIn();
+                submitDefectIn(decodedText);
             }
 
             async function defectOutOnScanSuccess(decodedText, decodedResult) {
@@ -704,7 +1042,8 @@
                 @this.scannedDefectOut = decodedText;
 
                 // submit
-                await @this.submitDefectOut();
+                // await @this.submitDefectOut();
+                submitDefectOut(decodedText);
 
             }
 
@@ -713,11 +1052,15 @@
                 document.getElementById('button-out').disabled = true;
                 await refreshDefectInScan(defectInOnScanSuccess);
                 document.getElementById('button-out').disabled = false;
+
+                reloadDefectInListTable();
             } else if (mode == "out") {
                 // await clearDefectInScan();
                 document.getElementById('button-out').disabled = true;
                 await refreshDefectOutScan(defectOutOnScanSuccess);
                 document.getElementById('button-out').disabled = false;
+
+                reloadDefectOutListTable();
             }
         });
 
