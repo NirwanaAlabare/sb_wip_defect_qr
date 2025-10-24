@@ -486,7 +486,7 @@ class DefectInOutController extends Controller
                         AND output_defects.master_plan_id is not null
                         AND `output_defects`.`defect_status` = 'defect'
                         AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
-                        AND YEAR(output_defects.updated_at) = '".date("Y")."'
+                        AND output_defects.updated_at >= '2025-10-01 00:00:00'
                         AND output_defect_in_out.id is null
                         ".$defectInSearch."
                         ".$defectInLine."
@@ -526,7 +526,7 @@ class DefectInOutController extends Controller
                         AND output_defects_packing.master_plan_id is not null
                         AND `output_defects_packing`.`defect_status` = 'defect'
                         AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
-                        AND YEAR(output_defects_packing.updated_at) = '".date("Y")."'
+                        AND output_defects_packing.updated_at >= '2025-10-01 00:00:00'
                         AND output_defect_in_out.id is null
                         ".$defectInSearch."
                         ".$defectInLine."
@@ -564,7 +564,7 @@ class DefectInOutController extends Controller
                     WHERE
                         `output_check_finishing`.`status` = 'defect'
                         AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
-                        AND YEAR(output_check_finishing.updated_at) = '".date("Y")."'
+                        AND output_check_finishing.updated_at >= '2025-10-01 00:00:00'
                         AND output_defect_in_out.id is null
                         ".$defectInSearch."
                         ".$defectInLine."
@@ -624,7 +624,6 @@ class DefectInOutController extends Controller
                             AND `output_defect_in_out`.`output_type` = 'qc'
                         WHERE
                             `output_defects`.`id` IS NOT NULL
-                            AND `output_defect_in_out`.id IS NULL
                             AND `output_defects`.`defect_status` = 'defect'
                             AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
                             AND `output_defects`.`kode_numbering` = '".$request->scannedDefectIn."'
@@ -653,7 +652,6 @@ class DefectInOutController extends Controller
                             AND `output_defect_in_out`.`output_type` = 'packing'
                         WHERE
                             `output_defects_packing`.`id` IS NOT NULL
-                            AND `output_defect_in_out`.id IS NULL
                             AND `output_defects_packing`.`defect_status` = 'defect'
                             AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
                             AND `output_defects_packing`.`kode_numbering` = '".$request->scannedDefectIn."'
@@ -682,7 +680,6 @@ class DefectInOutController extends Controller
                             AND `output_defect_in_out`.`output_type` = 'qcf'
                         WHERE
                             output_check_finishing.id IS NOT NULL
-                            AND `output_defect_in_out`.id IS NULL
                             AND `output_check_finishing`.`status` = 'defect'
                             AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
                             AND `output_check_finishing`.`kode_numbering` = '".$request->scannedDefectIn."'

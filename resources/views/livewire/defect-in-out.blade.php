@@ -26,7 +26,7 @@
                         </h5>
                         <div class="d-flex align-items-center">
                             <h5 class="px-3 mb-0 text-light" id="total-defect-in" wire:ignore>Total : <b>0</b></h5>
-                            <button class="btn btn-dark float-end" wire:click="refreshComponent()">
+                            <button class="btn btn-dark float-end" wire:click="refreshComponent()" onclick="reloadDefectInListTable()">
                                 <i class="fa-solid fa-rotate"></i>
                             </button>
                         </div>
@@ -125,9 +125,9 @@
                                             <td>
 
                                             </td>
-                                            {{-- <td>
+                                            <td>
 
-                                            </td> --}}
+                                            </td>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -744,18 +744,6 @@
             $('#button-in-out').on('click', async function (e) {
                 @this.changeMode("in-out")
             })
-
-            $("#defect-in-list-table").DataTable().on('draw.dt', function (e, settings, json, xhr) {
-                var info = $("#defect-in-list-table").DataTable().page.info();
-                var totalEntries = info.recordsDisplay;
-                $('#total-defect-in b').text(totalEntries);
-            });
-
-            $("#defect-out-list-table").DataTable().on('draw.dt', function (e, settings, json, xhr) {
-                var info = $("#defect-out-list-table").DataTable().page.info();
-                var totalEntries = info.recordsDisplay;
-                $('#total-defect-out b').text(totalEntries);
-            });
         });
 
         // Defect In List
@@ -849,6 +837,12 @@
                 var index = (page * length + (iDisplayIndex + 1));
                 $('td:eq(0)', row).html(index); // Assuming the first column is for the index
             }
+        });
+
+        $("#defect-in-list-table").DataTable().on('draw.dt', function (e, settings, json, xhr) {
+            var info = $("#defect-in-list-table").DataTable().page.info();
+            var totalEntries = info.recordsDisplay;
+            $('#total-defect-in b').text(totalEntries);
         });
 
         function reloadDefectInListTable() {
@@ -991,6 +985,12 @@
                 var index = (page * length + (iDisplayIndex + 1));
                 $('td:eq(0)', row).html(index); // Assuming the first column is for the index
             }
+        });
+
+        $("#defect-out-list-table").DataTable().on('draw.dt', function (e, settings, json, xhr) {
+            var info = $("#defect-out-list-table").DataTable().page.info();
+            var totalEntries = info.recordsDisplay;
+            $('#total-defect-out b').text(totalEntries);
         });
 
         function reloadDefectOutListTable() {
