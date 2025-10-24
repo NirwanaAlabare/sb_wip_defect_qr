@@ -125,9 +125,9 @@
                                             <td>
 
                                             </td>
-                                            <td>
+                                            {{-- <td>
 
-                                            </td>
+                                            </td> --}}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1432,6 +1432,10 @@
 
                         return `<span class="` + textColor + ` fw-bold">` + (data ? (data == "packing" ? "FINISHING" : data.toUpperCase()) : '-') + `</span>`;
                     }
+                },
+                {
+                    targets: [4],
+                    className: "disabled"
                 },
                 {
                     targets: [11],
