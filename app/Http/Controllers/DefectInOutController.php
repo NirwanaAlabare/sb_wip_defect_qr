@@ -494,7 +494,7 @@ class DefectInOutController extends Controller
                         ".$defectInType."
                         ".$defectInMasterPlan."
                     GROUP BY
-                        output_defects.kode_numbering
+                        output_defects.id
                     UNION ALL
                     SELECT
                         output_defects_packing.id,
@@ -534,7 +534,7 @@ class DefectInOutController extends Controller
                         ".$defectInTypePacking."
                         ".$defectInMasterPlan."
                     GROUP BY
-                        output_defects_packing.kode_numbering
+                        output_defects_packing.id
                     UNION ALL
                     SELECT
                         output_check_finishing.id,
@@ -572,7 +572,7 @@ class DefectInOutController extends Controller
                         ".$defectInTypeFinishing."
                         ".$defectInMasterPlan."
                     GROUP BY
-                        output_check_finishing.kode_numbering
+                        output_check_finishing.id
                 ) all_defect
                 where
                     id is not null
