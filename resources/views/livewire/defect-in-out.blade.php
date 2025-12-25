@@ -186,7 +186,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <select class="form-select form-select-sm" name="defectOutLine" id="defect-out-line"
-                                        wire:ignore onkeyup="reloadDefectOutListTable()">
+                                        wire:ignore onchange="reloadDefectOutListTable()">
                                         <option value="" selected>Pilih Line</option>
                                         @foreach ($lines as $line)
                                             <option value="{{ $line->username }}">
@@ -853,17 +853,6 @@
             });
         }
 
-        var scannedItemDefectIn = document.getElementById("scannedItemDefectIn");
-        scannedItemDefectIn.addEventListener("change", async function () {
-            @this.scannedDefectIn = this.value;
-
-            // submit
-            // @this.submitDefectIn();
-            submitDefectIn();
-
-            this.value = '';
-        });
-
         function submitDefectIn() {
             document.getElementById("loading").classList.remove("d-none");
 
@@ -893,6 +882,17 @@
                 }
             });
         }
+
+        var scannedItemDefectIn = document.getElementById("scannedItemDefectIn");
+        scannedItemDefectIn.addEventListener("change", async function () {
+            @this.scannedDefectIn = this.value;
+
+            // submit
+            // @this.submitDefectIn();
+            submitDefectIn();
+
+            this.value = '';
+        });
 
         // Defect Out List
         let defectOutListTable = $("#defect-out-list-table").DataTable({
