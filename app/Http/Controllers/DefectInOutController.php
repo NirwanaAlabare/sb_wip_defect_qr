@@ -583,6 +583,8 @@ class DefectInOutController extends Controller
                     ".$defectInFilterMasterPlan."
                     ".$defectInFilterSize."
                     ".$defectInFilterType."
+                ORDER BY 
+                    defect_time DESC
             ")
         );
 
