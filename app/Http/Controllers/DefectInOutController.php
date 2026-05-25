@@ -354,14 +354,13 @@ class DefectInOutController extends Controller
         if ($request->defectInSearch) {
             $defectInSearch = "
                 AND (
-                    master_plan.tgl_plan LIKE '%".$request->defectInSearch."%' OR
-                    master_plan.sewing_line LIKE '%".$request->defectInSearch."%' OR
-                    act_costing.kpno LIKE '%".$request->defectInSearch."%' OR
-                    act_costing.styleno LIKE '%".$request->defectInSearch."%' OR
-                    master_plan.color LIKE '%".$request->defectInSearch."%' OR
-                    output_defect_types.defect_type LIKE '%".$request->defectInSearch."%' OR
-                    so_det.size LIKE '%".$request->defectInSearch."%' OR
-                    output_defects.kode_numbering LIKE '%".$request->defectInSearch."%'
+                    tgl_plan LIKE '%".$request->defectInSearch."%' OR
+                    sewing_line LIKE '%".$request->defectInSearch."%' OR
+                    kpno LIKE '%".$request->defectInSearch."%' OR
+                    styleno LIKE '%".$request->defectInSearch."%' OR
+                    color LIKE '%".$request->defectInSearch."%' OR
+                    defect_type LIKE '%".$request->defectInSearch."%' OR
+                    size LIKE '%".$request->defectInSearch."%'
                 )
             ";
         }
@@ -487,6 +486,7 @@ class DefectInOutController extends Controller
                         AND `output_defects`.`defect_status` = 'defect'
                         AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
                         AND output_defects.updated_at >= '2025-10-01 00:00:00'
+                        AND output_defects.kode_numbering IS NOT NULL
                         AND output_defect_in_out.id is null
                         ".$defectInSearch."
                         ".$defectInLine."
@@ -527,6 +527,7 @@ class DefectInOutController extends Controller
                         AND `output_defects_packing`.`defect_status` = 'defect'
                         AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
                         AND output_defects_packing.updated_at >= '2025-10-01 00:00:00'
+                        AND `output_defects_packing`.`kode_numbering` IS NOT NULL
                         AND output_defect_in_out.id is null
                         ".$defectInSearch."
                         ".$defectInLine."
@@ -565,6 +566,7 @@ class DefectInOutController extends Controller
                         `output_check_finishing`.`status` = 'defect'
                         AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
                         AND output_check_finishing.updated_at >= '2025-10-01 00:00:00'
+                        AND `output_check_finishing`.`kode_numbering` IS NOT NULL
                         AND output_defect_in_out.id is null
                         ".$defectInSearch."
                         ".$defectInLine."
@@ -576,6 +578,7 @@ class DefectInOutController extends Controller
                 ) all_defect
                 where
                     id is not null
+                    ".$defectInSearch."
                     ".$defectInOutputType."
                     ".$defectInFilterKode."
                     ".$defectInFilterWaktu."
