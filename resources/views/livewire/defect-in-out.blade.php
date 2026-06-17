@@ -46,9 +46,10 @@
                                     <select class="form-select form-select-sm" name="defectInOutputType"
                                         id="defect-in-output-type" wire:ignore onchange="reloadDefectInListTable()">
                                         <option value="all">ALL</option>
-                                        <option value="qc">QC</option>
+                                        <option value="qc">QC ENDLINE</option>
                                         {{-- <option value="qcf">QC FINISHING</option> --}}
-                                        <option value="packing">FINISHING</option>
+                                        <option value="packing">QC FINISHING</option>
+                                        <option value="finishing_proses">FINISHING PROSES</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -816,13 +817,24 @@
                     targets: [8],
                     className: "text-nowrap text-center align-middle",
                     render: (data, type, row, meta) => {
-                        let textColor = "";
-                        if (data == "packing") {
-                            textColor = "text-success";
+                        let textColor = (
+                            data == "packing" ||
+                            data == "finishing_proses"
+                        ) ? "text-success" : "text-danger";
+
+                        let text = data;
+
+                        if (data == "qc") {
+                            text = "QC ENDLINE";
+                        } else if (data == "packing") {
+                            text = "QC FINISHING";
+                        } else if (data == "finishing_proses") {
+                            text = "FINISHING PROSES";
                         } else {
-                            textColor = "text-danger";
+                            text = (data || "").replaceAll("_", " ").toUpperCase();
                         }
-                        return "<span class='fw-bold " + textColor + "'>" + (data && data == "packing" ? "finishing" : data).toUpperCase() + "</span>";
+
+                        return `<span class="fw-bold ${textColor}">${text}</span>`;
                     }
                 },
                 {

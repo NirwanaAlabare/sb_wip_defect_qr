@@ -382,6 +382,7 @@ class DefectInOutController extends Controller
         $defectInSize = "";
         $defectInSizePacking = "";
         $defectInSizeFinishing = "";
+        $defectInSizeFinishingProses = "";
         if ($request->defectInSize) {
             $defectInSize = "
                 AND output_defects.so_det_id = '".$request->defectInSelectedSize."'
@@ -392,11 +393,15 @@ class DefectInOutController extends Controller
             $defectInSizeFinishing = "
                 AND output_check_finishing.so_det_id = '".$request->defectInSelectedSize."'
             ";
+            $defectInSizeFinishingProses = "
+                AND output_rfts.so_det_id = '".$request->defectInSelectedSize."'
+            ";
         }
 
         $defectInType = "";
         $defectInTypePacking = "";
         $defectInTypeFinishing = "";
+        $defectInTypeFinishingProses = "";
         if ($request->defectInSelectedType) {
             $defectInType = "
                 AND output_defects.defect_type_id = '".$request->defectInSelectedType."'
@@ -406,6 +411,9 @@ class DefectInOutController extends Controller
             ";
             $defectInTypeFinishing = "
                 AND output_check_finishing.defect_type_id = '".$request->defectInSelectedType."'
+            ";
+            $defectInTypeFinishingProses = "
+                AND output_secondary_out_defect.defect_type_id = '".$request->defectInSelectedType."'
             ";
         }
 
@@ -575,6 +583,47 @@ class DefectInOutController extends Controller
                         ".$defectInMasterPlan."
                     GROUP BY
                         output_check_finishing.id
+                    UNION ALL
+                    SELECT
+                        output_secondary_out.id,
+                        output_secondary_out.updated_at AS defect_time,
+                        userpassword.username sewing_line,
+                        output_secondary_out.kode_numbering,
+                        output_rfts.so_det_id,
+                        output_defect_types.defect_type,
+                        act_costing.kpno ws,
+                        act_costing.styleno style,
+                        so_det.color,
+                        so_det.size,
+                        userpassword.username,
+                        output_defect_in_out.id defect_in_id,
+                        'finishing_proses' output_type,
+                        COUNT( output_secondary_out.id ) AS defect_qty 
+                    FROM
+                        output_secondary_out
+                        LEFT JOIN user_sb_wip ON user_sb_wip.id = output_secondary_out.created_by
+                        LEFT JOIN userpassword ON userpassword.line_id = user_sb_wip.line_id
+                        LEFT JOIN output_secondary_in ON output_secondary_in.id = output_secondary_out.secondary_in_id
+                        LEFT JOIN output_rfts ON output_rfts.id = output_secondary_in.rft_id
+                        LEFT JOIN so_det ON so_det.id = output_rfts.so_det_id
+                        LEFT JOIN master_plan ON master_plan.id = output_rfts.master_plan_id
+                        LEFT JOIN act_costing ON act_costing.id = master_plan.id_ws
+                        LEFT JOIN output_secondary_out_defect ON output_secondary_out_defect.secondary_out_id = output_secondary_out.id
+                        LEFT JOIN output_defect_types ON output_defect_types.id = output_secondary_out_defect.defect_type_id 
+                        LEFT JOIN `output_defect_in_out` ON `output_defect_in_out`.`defect_id` = `output_secondary_out`.`id`
+                        AND `output_defect_in_out`.`output_type` = 'finishing_proses'
+                    WHERE
+                        `output_secondary_out`.`status` = 'defect'
+                        AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
+                        AND output_secondary_out.updated_at >= '2025-10-01 00:00:00'
+                        AND `output_secondary_out`.`kode_numbering` IS NOT NULL
+                        ".$defectInSearch."
+                        ".$defectInLine."
+                        ".$defectInSizeFinishingProses."
+                        ".$defectInTypeFinishingProses."
+                        ".$defectInMasterPlan."
+                    GROUP BY
+                        output_secondary_out.id 
                 ) all_defect
                 where
                     id is not null
@@ -688,6 +737,36 @@ class DefectInOutController extends Controller
                             AND `output_check_finishing`.`status` = 'defect'
                             AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
                             AND `output_check_finishing`.`kode_numbering` = '".$request->scannedDefectIn."'
+                        UNION ALL
+                        SELECT
+                            output_secondary_out.id,
+                            output_secondary_out.kode_numbering,
+                            output_rfts.so_det_id,
+                            output_defect_types.defect_type,
+                            act_costing.kpno ws,
+                            act_costing.styleno style,
+                            so_det.color,
+                            so_det.size,
+                            userpassword.username,
+                            output_defect_in_out.id defect_in_id,
+                            'finishing_proses' output_type
+                        FROM
+                            output_secondary_out
+                            LEFT JOIN user_sb_wip ON user_sb_wip.id = output_secondary_out.created_by
+                            LEFT JOIN userpassword ON userpassword.line_id = user_sb_wip.line_id
+                            LEFT JOIN output_secondary_in ON output_secondary_in.id = output_secondary_out.secondary_in_id
+                            LEFT JOIN output_rfts ON output_rfts.id = output_secondary_in.rft_id
+                            LEFT JOIN so_det ON so_det.id = output_rfts.so_det_id
+                            LEFT JOIN master_plan ON master_plan.id = output_rfts.master_plan_id
+                            LEFT JOIN act_costing ON act_costing.id = master_plan.id_ws
+                            LEFT JOIN output_secondary_out_defect ON output_secondary_out_defect.secondary_out_id = output_secondary_out.id
+                            LEFT JOIN output_defect_types ON output_defect_types.id = output_secondary_out_defect.defect_type_id 
+                            LEFT JOIN `output_defect_in_out` ON `output_defect_in_out`.`defect_id` = `output_secondary_out`.`id`
+                            AND `output_defect_in_out`.`output_type` = 'finishing_proses'
+                        WHERE
+                            `output_secondary_out`.`status` = 'defect'
+                            AND `output_defect_types`.`allocation` = '".Auth::user()->Groupp."'
+                            AND `output_secondary_out`.`kode_numbering` = '".$request->scannedDefectIn."'
                     ) all_defect
                 "))->first();
             } else if ($request->defectInOutputType == "packing") {
@@ -747,6 +826,38 @@ class DefectInOutController extends Controller
                 where("output_defect_types.allocation", Auth::user()->Groupp)->
                 where("output_check_finishing.kode_numbering", $request->scannedDefectIn)->
                 first();
+            } else if ($request->defectInOutputType == "finishing_proses") {
+                $scannedDefect = DB::table("output_secondary_out")
+                ->selectRaw("
+                    output_secondary_out.id,
+                    output_secondary_out.kode_numbering,
+                    output_rfts.so_det_id,
+                    output_defect_types.defect_type,
+                    act_costing.kpno ws,
+                    act_costing.styleno style,
+                    so_det.color,
+                    so_det.size,
+                    userpassword.username,
+                    output_defect_in_out.id defect_in_id,
+                    'finishing_proses' output_type
+                ")
+                ->leftJoin("user_sb_wip", "user_sb_wip.id", "=", "output_secondary_out.created_by")
+                ->leftJoin("userpassword", "userpassword.line_id", "=", "user_sb_wip.line_id")
+                ->leftJoin("output_secondary_in", "output_secondary_in.id", "=", "output_secondary_out.secondary_in_id")
+                ->leftJoin("output_rfts", "output_rfts.id", "=", "output_secondary_in.rft_id")
+                ->leftJoin("so_det", "so_det.id", "=", "output_rfts.so_det_id")
+                ->leftJoin("master_plan", "master_plan.id", "=", "output_rfts.master_plan_id")
+                ->leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")
+                ->leftJoin("output_secondary_out_defect", "output_secondary_out_defect.secondary_out_id", "=", "output_secondary_out.id")
+                ->leftJoin("output_defect_types", "output_defect_types.id", "=", "output_secondary_out_defect.defect_type_id")
+                ->leftJoin("output_defect_in_out", function ($join) {
+                    $join->on("output_defect_in_out.id", "=", "output_secondary_out.id");
+                    $join->on("output_defect_in_out.output_type", "=", DB::raw("'finishing_proses'"));
+                })
+                ->where("output_secondary_out.status", "defect")
+                ->where("output_defect_types.allocation", Auth::user()->Groupp)
+                ->where("output_secondary_out.kode_numbering", $request->scannedDefectIn)
+                ->first();
             } else {
                 $scannedDefect = DB::table("output_defects")->selectRaw("
                     output_defects.id,
@@ -825,20 +936,20 @@ class DefectInOutController extends Controller
     {
         if ($request->defectOutOutputType == "all" ) {
             $defectOutQuery = DefectInOut::selectRaw("
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.id ELSE master_plan.id END) END) master_plan_id,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.id_ws ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.id_ws ELSE master_plan.id_ws END) END) id_ws,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line ELSE master_plan.sewing_line END) END) sewing_line,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno ELSE act_costing.kpno END) END) as ws,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno ELSE act_costing.styleno END) END) style,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.color ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.color ELSE master_plan.color END) END) color,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.defect_type_id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.defect_type_id ELSE output_defects.defect_type_id END) END) defect_type_id,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type ELSE output_defect_types.defect_type END) END) defect_type,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.so_det_id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.so_det_id ELSE output_defects.so_det_id END) END) so_det_id,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.id WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.id WHEN output_defect_in_out.output_type = 'finishing_proses' THEN master_plan_finishing_proses.id ELSE master_plan.id END) master_plan_id,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.id_ws WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.id_ws WHEN output_defect_in_out.output_type = 'finishing_proses' THEN master_plan_finishing_proses.id_ws ELSE master_plan.id_ws END) id_ws,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line WHEN output_defect_in_out.output_type = 'finishing_proses' THEN master_plan_finishing_proses.sewing_line ELSE master_plan.sewing_line END) sewing_line,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno WHEN output_defect_in_out.output_type = 'finishing_proses' THEN act_costing_finishing_proses.kpno ELSE act_costing.kpno END) ws,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno WHEN output_defect_in_out.output_type = 'finishing_proses' THEN act_costing_finishing_proses.styleno ELSE act_costing.styleno END) style,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.color WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.color WHEN output_defect_in_out.output_type = 'finishing_proses' THEN so_det_finishing_proses.color ELSE master_plan.color END) color,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.defect_type_id WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.defect_type_id WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_secondary_out_defect.defect_type_id ELSE output_defects.defect_type_id END) defect_type_id,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_defect_types_finishing_proses.defect_type ELSE output_defect_types.defect_type END) defect_type,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.so_det_id WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.so_det_id WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_rfts.so_det_id ELSE output_defects.so_det_id END) so_det_id,
                 output_defect_in_out.kode_numbering,
                 output_defect_in_out.output_type,
                 output_defect_in_out.updated_at defect_time,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size ELSE so_det.size END) END) size,
-                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN COUNT(output_defects_packing.id) ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN COUNT(output_check_finishing.id) ELSE COUNT(output_defects.id) END) END) defect_qty
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size WHEN output_defect_in_out.output_type = 'finishing_proses' THEN so_det_finishing_proses.size ELSE so_det.size END) size,
+                (CASE WHEN output_defect_in_out.output_type = 'packing' THEN COUNT(output_defects_packing.id) WHEN output_defect_in_out.output_type = 'qcf' THEN COUNT(output_check_finishing.id) WHEN output_defect_in_out.output_type = 'finishing_proses' THEN COUNT(output_secondary_out.id) ELSE COUNT(output_defects.id) END) defect_qty
             ")->
             // Defect
             leftJoin("output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
@@ -868,21 +979,30 @@ class DefectInOutController extends Controller
             leftJoin("act_costing as act_costing_finish", "act_costing_finish.id", "=", "so_finish.id_cost")->
             leftJoin("master_plan as master_plan_finish", "master_plan_finish.id", "=", "output_check_finishing.master_plan_id")->
             leftJoin("userpassword as userpassword_finish", "userpassword.username", "=", "output_check_finishing.created_by")->
+            // Defect Finishing Proses
+            leftJoin("output_secondary_out", "output_secondary_out.id", "=", "output_defect_in_out.defect_id")->
+            leftJoin("output_secondary_out_defect", "output_secondary_out_defect.secondary_out_id", "=", "output_secondary_out.id")->
+            leftJoin("output_defect_types as output_defect_types_finishing_proses", "output_defect_types_finishing_proses.id", "=", "output_secondary_out_defect.defect_type_id")->
+            leftJoin("output_secondary_in", "output_secondary_in.id", "=", "output_secondary_out.secondary_in_id")->
+            leftJoin("output_rfts", "output_rfts.id", "=", "output_secondary_in.rft_id")->
+            leftJoin("so_det as so_det_finishing_proses", "so_det_finishing_proses.id", "=", "output_rfts.so_det_id")->
+            leftJoin("master_plan as master_plan_finishing_proses", "master_plan_finishing_proses.id", "=", "output_rfts.master_plan_id")->
+            leftJoin("act_costing as act_costing_finishing_proses", "act_costing_finishing_proses.id", "=", "master_plan_finishing_proses.id_ws")->
             // Conditional
-            whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.id ELSE output_defects.id END) END) IS NOT NULL ")->
-            whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.allocation ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.allocation ELSE output_defect_types.allocation END) END) = '".Auth::user()->Groupp."' ")->
+            whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.id WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_secondary_out.id ELSE output_defects.id END) IS NOT NULL ")->
+            whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.allocation WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.allocation WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_defect_types_finishing_proses.allocation ELSE output_defect_types.allocation END) = '".Auth::user()->Groupp."' ")->
             where("output_defect_in_out.status", "defect")->
             where("output_defect_in_out.type", Auth::user()->Groupp)->
             whereRaw("YEAR(output_defect_in_out.created_at) = '".date("Y")."'");
             if ($request->defectOutSearch) {
                 $defectOutQuery->whereRaw("(
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.tgl_plan ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.tgl_plan ELSE master_plan.tgl_plan END) END) LIKE '%".$request->defectOutSearch."%' OR
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line ELSE master_plan.sewing_line END) END) LIKE '%".$request->defectOutSearch."%' OR
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno ELSE act_costing.kpno END) END) LIKE '%".$request->defectOutSearch."%' OR
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno ELSE act_costing.styleno END) END) LIKE '%".$request->defectOutSearch."%' OR
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.color ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.color ELSE master_plan.color END) END) LIKE '%".$request->defectOutSearch."%' OR
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type ELSE output_defect_types.defect_type END) END) LIKE '%".$request->defectOutSearch."%' OR
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size ELSE so_det.size END) END) LIKE '%".$request->defectOutSearch."%' OR
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.tgl_plan WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.tgl_plan WHEN output_defect_in_out.output_type = 'finishing_proses' THEN master_plan_finishing_proses.tgl_plan ELSE master_plan.tgl_plan END) LIKE '%".$request->defectOutSearch."%' OR
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line WHEN output_defect_in_out.output_type = 'finishing_proses' THEN master_plan_finishing_proses.sewing_line ELSE master_plan.sewing_line END) LIKE '%".$request->defectOutSearch."%' OR
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno WHEN output_defect_in_out.output_type = 'finishing_proses' THEN act_costing_finishing_proses.kpno ELSE act_costing.kpno END) LIKE '%".$request->defectOutSearch."%' OR
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno WHEN output_defect_in_out.output_type = 'finishing_proses' THEN act_costing_finishing_proses.styleno ELSE act_costing.styleno END) LIKE '%".$request->defectOutSearch."%' OR
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.color WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.color WHEN output_defect_in_out.output_type = 'finishing_proses' THEN so_det_finishing_proses.color ELSE master_plan.color END) LIKE '%".$request->defectOutSearch."%' OR
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_defect_types_finishing_proses.defect_type ELSE output_defect_types.defect_type END) LIKE '%".$request->defectOutSearch."%' OR
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size WHEN output_defect_in_out.output_type = 'finishing_proses' THEN so_det_finishing_proses.size ELSE so_det.size END) LIKE '%".$request->defectOutSearch."%' OR
                     output_defect_in_out.kode_numbering LIKE '%".$request->defectOutSearch."%'
                 )");
             }
@@ -890,38 +1010,39 @@ class DefectInOutController extends Controller
             //     $defectOutQuery->whereBetween("output_defect_in_out.updated_at", [$request->defectOutDate." 00:00:00", $request->defectOutDate." 23:59:59"]);
             // }
             if ($request->defectOutLine) {
-                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line ELSE master_plan.sewing_line END) END) = '".$request->defectOutLine."'");
+                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line WHEN output_defect_in_out.output_type = 'finishing_proses' THEN master_plan_finishing_proses.sewing_line ELSE master_plan.sewing_line END) = '".$request->defectOutLine."'");
             }
             if ($request->defectOutSelectedMasterPlan) {
-                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.id ELSE master_plan.id END) END) = '".$request->defectOutSelectedMasterPlan."'");
+                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.id WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.id WHEN output_defect_in_out.output_type = 'finishing_proses' THEN master_plan_finishing_proses.id ELSE master_plan.id END) = '".$request->defectOutSelectedMasterPlan."'");
             }
             if ($request->defectOutSelectedSize) {
-                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.so_det_id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.so_det_id ELSE output_defects.so_det_id END) END) = '".$request->defectOutSelectedSize."'");
+                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.so_det_id WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.so_det_id WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_rfts.so_det_id ELSE output_defects.so_det_id END) = '".$request->defectOutSelectedSize."'");
             }
             if ($request->defectOutSelectedType) {
-                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.defect_type_id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.defect_type_id ELSE output_defects.defect_type_id END) END) = '".$request->defectOutSelectedType."'");
-            };
+                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.defect_type_id WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.defect_type_id WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_secondary_out_defect.defect_type_id ELSE output_defects.defect_type_id END) = '".$request->defectOutSelectedType."'");
+            }
             if ($request->defectOutFilterKode) {
                 $defectOutQuery->whereRaw("output_defect_in_out.kode_numbering LIKE '%".$request->defectOutFilterKode."%'");
             }
+
             if ($request->defectOutFilterWaktu) {
                 $defectOutQuery->whereRaw("output_defect_in_out.updated_at LIKE '%".$request->defectOutFilterWaktu."%'");
             }
             if ($request->defectOutFilterLine) {
-                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line ELSE master_plan.sewing_line END) END) LIKE '%".str_replace(" ", "_", $request->defectOutFilterLine)."%'");
+                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN master_plan_packing.sewing_line WHEN output_defect_in_out.output_type = 'qcf' THEN master_plan_finish.sewing_line WHEN output_defect_in_out.output_type = 'finishing_proses' THEN master_plan_finishing_proses.sewing_line ELSE master_plan.sewing_line END) LIKE '%".str_replace(' ', '_', $request->defectOutFilterLine)."%'");
             }
             if ($request->defectOutFilterMasterPlan) {
                 $defectOutQuery->whereRaw("(
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno ELSE act_costing.kpno END) END) LIKE '%".$request->defectOutFilterMasterPlan."%' OR
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno ELSE act_costing.kpno END) END) LIKE '%".$request->defectOutFilterMasterPlan."%' OR
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.color ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.color ELSE so_det.color END) END) LIKE '%".$request->defectOutFilterMasterPlan."%'
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno WHEN output_defect_in_out.output_type = 'finishing_proses' THEN act_costing_finishing_proses.kpno ELSE act_costing.kpno END) LIKE '%".$request->defectOutFilterMasterPlan."%' OR
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno WHEN output_defect_in_out.output_type = 'finishing_proses' THEN act_costing_finishing_proses.styleno ELSE act_costing.styleno END) LIKE '%".$request->defectOutFilterMasterPlan."%' OR
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.color WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.color WHEN output_defect_in_out.output_type = 'finishing_proses' THEN so_det_finishing_proses.color ELSE so_det.color END) LIKE '%".$request->defectOutFilterMasterPlan."%'
                 )");
             }
             if ($request->defectOutFilterSize) {
-                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size ELSE so_det.size END) END) LIKE '%".$request->defectOutFilterSize."%'");
+                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size WHEN output_defect_in_out.output_type = 'finishing_proses' THEN so_det_finishing_proses.size ELSE so_det.size END) LIKE '%".$request->defectOutFilterSize."%'");
             }
             if ($request->defectOutFilterType) {
-                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type ELSE output_defect_types.defect_type END) END) LIKE '%".$request->defectOutFilterType."%'");
+                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_defect_types_finishing_proses.defect_type ELSE output_defect_types.defect_type END) LIKE '%".$request->defectOutFilterType."%'");
             }
         } else {
             $defectOutQuery = DefectInOut::selectRaw("
@@ -940,7 +1061,7 @@ class DefectInOutController extends Controller
                 so_det.size,
                 COUNT(output_defect_in_out.id) defect_qty
             ")->
-            leftJoin(($request->defectOutOutputType == 'packing' ? 'output_defects_packing' : ($request->defectOutOutputType == 'qcf' ? 'output_check_finishing' : 'output_defects'))." as output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
+            leftJoin(($request->defectOutOutputType == 'packing' ? 'output_defects_packing' : ($request->defectOutOutputType == 'qcf' ? 'output_check_finishing' : ($request->defectOutOutputType == 'finishing_proses' ? 'output_secondary_out' : 'output_defects')))." as output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
             leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
             leftJoin("master_plan", "master_plan.id", "=", "output_defects.master_plan_id")->
             leftJoin("act_costing", "act_costing.id", "=", "master_plan.id_ws")->
@@ -998,7 +1119,7 @@ class DefectInOutController extends Controller
                 $defectOutQuery->whereRaw("so_det.size LIKE '%".$request->defectOutFilterSize."%'");
             }
             if ($request->defectOutFilterType) {
-                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type ELSE output_defect_types.defect_type END) END) LIKE '%".$request->defectOutFilterType."%'");
+                $defectOutQuery->whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_defect_types_finishing_proses.defect_type ELSE output_defect_types.defect_type END) LIKE '%".$request->defectOutFilterType."%'");
             }
         }
 
@@ -1015,15 +1136,15 @@ class DefectInOutController extends Controller
         if ($request->scannedDefectOut) {
             if ($request->defectOutOutputType == "all" ) {
                 $scannedDefect = DefectInOut::selectRaw("
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.id ELSE output_defects.id END) END) id,
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.kode_numbering ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.kode_numbering ELSE output_defects.kode_numbering END) END) kode_numbering,
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.so_det_id ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.so_det_id ELSE output_defects.so_det_id END) END) so_det_id,
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type ELSE output_defect_types.defect_type END) END) defect_type,
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno ELSE act_costing.kpno END) END) ws,
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno ELSE act_costing.styleno END) END) style,
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.color ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.color ELSE so_det.color END) END) color,
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size ELSE so_det.size END) END) size,
-                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN userpassword_packing.username ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN userpassword_finish.username ELSE userpassword.username END) END) username,
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.id WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.id WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_secondary_out.id ELSE output_defects.id END) id,
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.kode_numbering WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.kode_numbering WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_secondary_out.kode_numbering ELSE output_defects.kode_numbering END) kode_numbering,
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.so_det_id WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.so_det_id WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_rfts.so_det_id ELSE output_defects.so_det_id END) so_det_id,
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defect_types_packing.defect_type WHEN output_defect_in_out.output_type = 'qcf' THEN output_defect_types_finish.defect_type WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_defect_types_finishing_proses.defect_type ELSE output_defect_types.defect_type END) defect_type,
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.kpno WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.kpno WHEN output_defect_in_out.output_type = 'finishing_proses' THEN act_costing_finishing_proses.kpno ELSE act_costing.kpno END) ws,
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN act_costing_packing.styleno WHEN output_defect_in_out.output_type = 'qcf' THEN act_costing_finish.styleno WHEN output_defect_in_out.output_type = 'finishing_proses' THEN act_costing_finishing_proses.styleno ELSE act_costing.styleno END) style,
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.color WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.color WHEN output_defect_in_out.output_type = 'finishing_proses' THEN so_det_finishing_proses.color ELSE so_det.color END) color,
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN so_det_packing.size WHEN output_defect_in_out.output_type = 'qcf' THEN so_det_finish.size WHEN output_defect_in_out.output_type = 'finishing_proses' THEN so_det_finishing_proses.size ELSE so_det.size END) size,
+                    (CASE WHEN output_defect_in_out.output_type = 'packing' THEN userpassword_packing.username WHEN output_defect_in_out.output_type = 'qcf' THEN userpassword_finish.username WHEN output_defect_in_out.output_type = 'finishing_proses' THEN userpassword_finishing_proses.username ELSE userpassword.username END) username,
                     output_defect_in_out.output_type
                 ")->
                 // Defect
@@ -1054,10 +1175,19 @@ class DefectInOutController extends Controller
                 leftJoin("act_costing as act_costing_finish", "act_costing_finish.id", "=", "so_finish.id_cost")->
                 leftJoin("master_plan as master_plan_finish", "master_plan_finish.id", "=", "output_check_finishing.master_plan_id")->
                 leftJoin("userpassword as userpassword_finish", "userpassword.username", "=", "output_check_finishing.created_by")->
+                // Defect Finishing Proses
+                leftJoin("output_secondary_out", "output_secondary_out.id", "=", "output_defect_in_out.defect_id")->
+                leftJoin("output_secondary_out_defect", "output_secondary_out_defect.secondary_out_id", "=", "output_secondary_out.id")->
+                leftJoin("output_defect_types as output_defect_types_finishing_proses", "output_defect_types_finishing_proses.id", "=", "output_secondary_out_defect.defect_type_id")->
+                leftJoin("output_secondary_in", "output_secondary_in.id", "=", "output_secondary_out.secondary_in_id")->
+                leftJoin("output_rfts", "output_rfts.id", "=", "output_secondary_in.rft_id")->
+                leftJoin("so_det as so_det_finishing_proses", "so_det_finishing_proses.id", "=", "output_rfts.so_det_id")->
+                leftJoin("master_plan as master_plan_finishing_proses", "master_plan_finishing_proses.id", "=", "output_rfts.master_plan_id")->
+                leftJoin("act_costing as act_costing_finishing_proses", "act_costing_finishing_proses.id", "=", "master_plan_finishing_proses.id_ws")->
                 // Conditional
                 where("output_defect_in_out.status", "defect")->
                 where("output_defect_in_out.type", Auth::user()->Groupp)->
-                whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.kode_numbering ELSE (CASE WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.kode_numbering ELSE output_defects.kode_numbering END) END) = '".$request->scannedDefectOut."'")->
+                whereRaw("(CASE WHEN output_defect_in_out.output_type = 'packing' THEN output_defects_packing.kode_numbering WHEN output_defect_in_out.output_type = 'qcf' THEN output_check_finishing.kode_numbering WHEN output_defect_in_out.output_type = 'finishing_proses' THEN output_secondary_out.kode_numbering ELSE output_defects.kode_numbering END) = '".$request->scannedDefectOut."'")->
                 first();
             } else {
                 $scannedDefect = DefectInOut::selectRaw("
@@ -1072,7 +1202,7 @@ class DefectInOutController extends Controller
                     userpassword.username,
                     output_defect_in_out.output_type
                 ")->
-                leftJoin(($request->defectOutOutputType == 'packing' ? 'output_defects_packing' : ($request->defectOutOutputType == 'qcf' ? 'output_check_finishing' : 'output_defects'))." as output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
+                leftJoin(($request->defectOutOutputType == 'packing' ? 'output_defects_packing' : ($request->defectOutOutputType == 'qcf' ? 'output_check_finishing' : ($request->defectOutOutputType == 'finishing_proses' ? 'output_secondary_out' : 'output_defects')))." as output_defects", "output_defects.id", "=", "output_defect_in_out.defect_id")->
                 leftJoin("user_sb_wip", "user_sb_wip.id", "=", "output_defects.created_by")->
                 leftJoin("userpassword", "userpassword.line_id", "=", "user_sb_wip.line_id")->
                 leftJoin("so_det", "so_det.id", "=", "output_defects.so_det_id")->
