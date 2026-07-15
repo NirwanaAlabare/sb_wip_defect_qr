@@ -565,8 +565,7 @@ class DefectInOutController extends Controller
                         COUNT(output_defects_packing.id) as defect_qty
                     FROM
                         `output_defects_packing`
-                        LEFT JOIN `user_sb_wip` ON `user_sb_wip`.`id` = `output_defects_packing`.`created_by`
-                        LEFT JOIN `userpassword` ON `userpassword`.`line_id` = `user_sb_wip`.`line_id`
+                        LEFT JOIN `userpassword` ON `userpassword`.`username` = `output_defects_packing`.`created_by`
                         LEFT JOIN `so_det` ON `so_det`.`id` = `output_defects_packing`.`so_det_id`
                         LEFT JOIN `master_plan` ON `master_plan`.`id` = `output_defects_packing`.`master_plan_id`
                         LEFT JOIN `act_costing` ON `act_costing`.`id` = `master_plan`.`id_ws`
@@ -606,8 +605,7 @@ class DefectInOutController extends Controller
                         COUNT(output_check_finishing.id) as defect_qty
                     FROM
                         `output_check_finishing`
-                        LEFT JOIN `user_sb_wip` ON `user_sb_wip`.`id` = `output_check_finishing`.`created_by`
-                        LEFT JOIN `userpassword` ON `userpassword`.`line_id` = `user_sb_wip`.`line_id`
+                        LEFT JOIN `userpassword` ON `userpassword`.`username` = `output_check_finishing`.`created_by`
                         LEFT JOIN `so_det` ON `so_det`.`id` = `output_check_finishing`.`so_det_id`
                         LEFT JOIN `master_plan` ON `master_plan`.`id` = `output_check_finishing`.`master_plan_id`
                         LEFT JOIN `act_costing` ON `act_costing`.`id` = `master_plan`.`id_ws`
@@ -645,8 +643,7 @@ class DefectInOutController extends Controller
                         COUNT( output_secondary_out.id ) AS defect_qty 
                     FROM
                         output_secondary_out
-                        LEFT JOIN user_sb_wip ON user_sb_wip.id = output_secondary_out.created_by
-                        LEFT JOIN userpassword ON userpassword.line_id = user_sb_wip.line_id
+                        LEFT JOIN userpassword ON userpassword.line_id = output_secondary_out.created_by
                         LEFT JOIN output_secondary_in ON output_secondary_in.id = output_secondary_out.secondary_in_id
                         LEFT JOIN output_rfts ON output_rfts.id = output_secondary_in.rft_id
                         LEFT JOIN so_det ON so_det.id = output_rfts.so_det_id
@@ -1111,7 +1108,7 @@ class DefectInOutController extends Controller
             leftJoin("so as so_packing", "so_packing.id", "=", "so_det_packing.id_so")->
             leftJoin("act_costing as act_costing_packing", "act_costing_packing.id", "=", "so_packing.id_cost")->
             leftJoin("master_plan as master_plan_packing", "master_plan_packing.id", "=", "output_defects_packing.master_plan_id")->
-            leftJoin("userpassword as userpassword_packing", "userpassword.username", "=", "output_defects_packing.created_by")->
+            leftJoin("userpassword as userpassword_packing", "userpassword_packing.username", "=", "output_defects_packing.created_by")->
             // Defect Finishing
             leftJoin("output_check_finishing", "output_check_finishing.id", "=", "output_defect_in_out.defect_id")->
             leftJoin("output_defect_types as output_defect_types_finish", "output_defect_types_finish.id", "=", "output_check_finishing.defect_type_id")->
@@ -1120,7 +1117,7 @@ class DefectInOutController extends Controller
             leftJoin("so as so_finish", "so_finish.id", "=", "so_det_finish.id_so")->
             leftJoin("act_costing as act_costing_finish", "act_costing_finish.id", "=", "so_finish.id_cost")->
             leftJoin("master_plan as master_plan_finish", "master_plan_finish.id", "=", "output_check_finishing.master_plan_id")->
-            leftJoin("userpassword as userpassword_finish", "userpassword.username", "=", "output_check_finishing.created_by")->
+            leftJoin("userpassword as userpassword_finish", "userpassword_finish.username", "=", "output_check_finishing.created_by")->
             // Defect Finishing Proses
             leftJoin("output_secondary_out", "output_secondary_out.id", "=", "output_defect_in_out.defect_id")->
             leftJoin("output_secondary_out_defect", "output_secondary_out_defect.secondary_out_id", "=", "output_secondary_out.id")->
@@ -1129,7 +1126,8 @@ class DefectInOutController extends Controller
             leftJoin("output_rfts", "output_rfts.id", "=", "output_secondary_in.rft_id")->
             leftJoin("so_det as so_det_finishing_proses", "so_det_finishing_proses.id", "=", "output_rfts.so_det_id")->
             leftJoin("master_plan as master_plan_finishing_proses", "master_plan_finishing_proses.id", "=", "output_rfts.master_plan_id")->
-            leftJoin("act_costing as act_costing_finishing_proses", "act_costing_finishing_proses.id", "=", "master_plan_finishing_proses.id_ws")->
+            leftJoin("act_costing as act_costing_finishing_proses", "act_costing_finishing_proses.id", "=", "output_rfts.master_plan_id")->
+            leftJoin("userpassword as userpassword_finishing_proses", "userpassword_finishing_proses.line_id", "=", "output_secondary_out.created_by")->
             // Defect QC FNS Packing Return
             leftJoin("output_defect_packing_po_return", "output_defect_packing_po_return.id", "=", "output_defect_in_out.defect_id")->
             leftJoin("output_defect_types as output_defect_types_return", "output_defect_types_return.id", "=", "output_defect_packing_po_return.defect_type_id")->
@@ -1321,7 +1319,7 @@ class DefectInOutController extends Controller
                 leftJoin("so as so_packing", "so_packing.id", "=", "so_det_packing.id_so")->
                 leftJoin("act_costing as act_costing_packing", "act_costing_packing.id", "=", "so_packing.id_cost")->
                 leftJoin("master_plan as master_plan_packing", "master_plan_packing.id", "=", "output_defects_packing.master_plan_id")->
-                leftJoin("userpassword as userpassword_packing", "userpassword.username", "=", "output_defects_packing.created_by")->
+                leftJoin("userpassword as userpassword_packing", "userpassword_packing.username", "=", "output_defects_packing.created_by")->
                 // Defect Finishing
                 leftJoin("output_check_finishing", "output_check_finishing.id", "=", "output_defect_in_out.defect_id")->
                 leftJoin("output_defect_types as output_defect_types_finish", "output_defect_types_finish.id", "=", "output_check_finishing.defect_type_id")->
@@ -1330,7 +1328,7 @@ class DefectInOutController extends Controller
                 leftJoin("so as so_finish", "so_finish.id", "=", "so_det_finish.id_so")->
                 leftJoin("act_costing as act_costing_finish", "act_costing_finish.id", "=", "so_finish.id_cost")->
                 leftJoin("master_plan as master_plan_finish", "master_plan_finish.id", "=", "output_check_finishing.master_plan_id")->
-                leftJoin("userpassword as userpassword_finish", "userpassword.username", "=", "output_check_finishing.created_by")->
+                leftJoin("userpassword as userpassword_finish", "userpassword_finish.username", "=", "output_check_finishing.created_by")->
                 // Defect Finishing Proses
                 leftJoin("output_secondary_out", "output_secondary_out.id", "=", "output_defect_in_out.defect_id")->
                 leftJoin("output_secondary_out_defect", "output_secondary_out_defect.secondary_out_id", "=", "output_secondary_out.id")->
@@ -1339,7 +1337,8 @@ class DefectInOutController extends Controller
                 leftJoin("output_rfts", "output_rfts.id", "=", "output_secondary_in.rft_id")->
                 leftJoin("so_det as so_det_finishing_proses", "so_det_finishing_proses.id", "=", "output_rfts.so_det_id")->
                 leftJoin("master_plan as master_plan_finishing_proses", "master_plan_finishing_proses.id", "=", "output_rfts.master_plan_id")->
-                leftJoin("act_costing as act_costing_finishing_proses", "act_costing_finishing_proses.id", "=", "master_plan_finishing_proses.id_ws")->
+                leftJoin("act_costing as act_costing_finishing_proses", "act_costing_finishing_proses.id", "=", "output_rfts.master_plan_id")->
+                leftJoin("userpassword as userpassword_finishing_proses", "userpassword_finishing_proses.line_id", "=", "output_secondary_out.created_by")->
                 // Defect QC FNS Packing Return
                 leftJoin("output_defect_packing_po_return", "output_defect_packing_po_return.id", "=", "output_defect_in_out.defect_id")->
                 leftJoin("output_defect_types as output_defect_types_return", "output_defect_types_return.id", "=", "output_defect_packing_po_return.defect_type_id")->
