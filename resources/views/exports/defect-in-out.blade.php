@@ -21,7 +21,15 @@
                 <td style="border: 1px solid black;">{{ $defect->time_in }}</td>
                 <td style="border: 1px solid black;">{{ $defect->time_out }}</td>
                 <td style="border: 1px solid black;">{{ $defect->sewing_line }}</td>
-                <td style="border: 1px solid black;">{{ ($defect->output_type == "packing" ? "finishing" : $defect->output_type) }}</td>
+                <td style="border: 1px solid black;">
+                    {{
+                        $defect->output_type == 'qc' ? 'QC ENDLINE' :
+                        ($defect->output_type == 'packing' ? 'QC FINISHING' :
+                        ($defect->output_type == 'finishing_proses' ? 'FINISHING PROSES' :
+                        ($defect->output_type == 'qc_fns_pck_return' ? 'QC FNS - PCK RETURN' :
+                        $defect->output_type)))
+                    }}
+                </td>
                 <td style="border: 1px solid black;">{{ $defect->kode_numbering }}</td>
                 <td style="border: 1px solid black;">{{ $defect->no_ws }}</td>
                 <td style="border: 1px solid black;">{{ $defect->style }}</td>
@@ -29,7 +37,7 @@
                 <td style="border: 1px solid black;">{{ $defect->size }}</td>
                 <td style="border: 1px solid black;">{{ $defect->defect_type }}</td>
                 <td style="border: 1px solid black;">{{ $defect->defect_area }}</td>
-                <td style="border: 1px solid black;">{{ $defect->status }}</td>
+                <td style="border: 1px solid black;">{{ strtoupper($defect->status) }}</td>
             </tr>
         @endforeach
     </tbody>

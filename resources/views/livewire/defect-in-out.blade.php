@@ -50,6 +50,7 @@
                                         {{-- <option value="qcf">QC FINISHING</option> --}}
                                         <option value="packing">QC FINISHING</option>
                                         <option value="finishing_proses">FINISHING PROSES</option>
+                                        <option value="qc_fns_pck_return">QC FNS - PCK RETURN</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -180,9 +181,11 @@
                                     <select class="form-select form-select-sm" name="defectOutOutputType"
                                         id="defect-out-output-type" wire:ignore onchange="reloadDefectOutListTable()">
                                         <option value="all">ALL</option>
-                                        <option value="qc">QC</option>
+                                        <option value="qc">QC ENDLINE</option>
                                         {{-- <option value="qcf">QC FINISHING</option> --}}
-                                        <option value="packing">FINISHING</option>
+                                        <option value="packing">QC FINISHING</option>
+                                        <option value="finishing_proses">FINISHING PROSES</option>
+                                        <option value="qc_fns_pck_return">QC FNS - PCK RETURN</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -536,9 +539,10 @@
                                 <select class="form-select select2-defect-in-out-modal" id="defectInOutDetailDepartment"
                                     onchange="defectInOutDetailReload()">
                                     <option value="">All Department</option>
-                                    <option value="qc">QC</option>
-                                    {{-- <option value="qcf">QC FINISHING</option> --}}
-                                    <option value="packing">FINISHING</option>
+                                    <option value="qc">QC ENDLINE</option>
+                                    <option value="packing">QC FINISHING</option>
+                                    <option value="finishing_proses">FINISHING PROSES</option>
+                                    <option value="qc_fns_pck_return">QC FNS - PCK RETURN</option>
                                 </select>
                             </div>
                         </div>
@@ -830,6 +834,8 @@
                             text = "QC FINISHING";
                         } else if (data == "finishing_proses") {
                             text = "FINISHING PROSES";
+                        } else if (data == "qc_fns_pck_return") {
+                            text = "QC FNS - PCK RETURN";
                         } else {
                             text = (data || "").replaceAll("_", " ").toUpperCase();
                         }
@@ -976,13 +982,26 @@
                     targets: [8],
                     className: "text-nowrap text-center align-middle",
                     render: (data, type, row, meta) => {
-                        let textColor = "";
-                        if (data == "packing") {
-                            textColor = "text-success";
+                        let textColor = (
+                            data == "packing" ||
+                            data == "finishing_proses"
+                        ) ? "text-success" : "text-danger";
+
+                        let text = data;
+
+                        if (data == "qc") {
+                            text = "QC ENDLINE";
+                        } else if (data == "packing") {
+                            text = "QC FINISHING";
+                        } else if (data == "finishing_proses") {
+                            text = "FINISHING PROSES";
+                        } else if (data == "qc_fns_pck_return") {
+                            text = "QC FNS - PCK RETURN";
                         } else {
-                            textColor = "text-danger";
+                            text = (data || "").replaceAll("_", " ").toUpperCase();
                         }
-                        return "<span class='fw-bold " + textColor + "'>" + (data && data == "packing" ? "finishing" : data).toUpperCase() + "</span>";
+
+                        return `<span class="fw-bold ${textColor}">${text}</span>`;
                     }
                 },
                 {
@@ -1434,15 +1453,26 @@
                 {
                     targets: [3],
                     render: (data, type, row, meta) => {
-                        let textColor = '';
+                        let textColor = (
+                            data == "packing" ||
+                            data == "finishing_proses"
+                        ) ? "text-success" : "text-danger";
 
-                        if (data == "packing") {
-                            textColor = "text-success";
+                        let text = data;
+
+                        if (data == "qc") {
+                            text = "QC ENDLINE";
+                        } else if (data == "packing") {
+                            text = "QC FINISHING";
+                        } else if (data == "finishing_proses") {
+                            text = "FINISHING PROSES";
+                        } else if (data == "qc_fns_pck_return") {
+                            text = "QC FNS - PCK RETURN";
                         } else {
-                            textColor = "text-danger";
+                            text = (data || "").replaceAll("_", " ").toUpperCase();
                         }
 
-                        return `<span class="` + textColor + ` fw-bold">` + (data ? (data == "packing" ? "FINISHING" : data.toUpperCase()) : '-') + `</span>`;
+                        return `<span class="fw-bold ${textColor}">${text}</span>`;
                     }
                 },
                 {
